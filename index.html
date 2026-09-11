@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>NeuroFocus</title>
+<style>
+:root{
+  --bg:#07070f; --bg2:#0b0b1a;
+  --cyan:#22d3ee; --mag:#e879f9; --vio:#8b5cf6;
+  --text:#e5e7eb; --muted:#8b93a7;
+  --glass:rgba(255,255,255,.04); --glass2:rgba(255,255,255,.07);
+  --line:rgba(255,255,255,.08);
+  --ok:#34d399; --warn:#fbbf24;
+  --r:20px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:radial-gradient(1200px 800px at 50% -10%, #141433 0%, var(--bg) 55%) fixed, var(--bg);
+  color:var(--text);
+  font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+#stars{position:fixed;inset:0;z-index:0;pointer-events:none}
+.app{position:relative;z-index:1;max-width:440px;margin:0 auto;padding:22px 16px 60px;display:flex;flex-direction:column;gap:14px}
+header{display:flex;align-items:center;justify-content:space-between;padding:4px 6px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:.5px}
+.logo .dot{width:10px;height:10px;border-radius:50%;background:linear-gradient(135deg,var(--cyan),var(--mag));box-shadow:0 0 14px var(--cyan)}
+.logo span{background:linear-gradient(90deg,var(--cyan),var(--mag));-webkit-background-clip:text;background-clip:text;color:transparent;font-size:18px}
+.sub{color:var(--muted);font-size:12px}
+
+.card{
+  position:relative;background:var(--glass);border-radius:var(--r);padding:18px;
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border:1px solid transparent;
+  background-clip:padding-box;
+}
+.card::before{
+  content:"";position:absolute;inset:0;border-radius:var(--r);padding:1px;
+  background:linear-gradient(135deg,rgba(34,211,238,.55),rgba(139,92,246,.25) 50%,rgba(232,121,249,.55));
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;
+}
+.card h2{font-size:13px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:12px;font-weight:600}
+
+/* ---- hero ---- */
+.hero{display:flex;flex-direction:column;align-items:center;gap:8px;padding-top:12px}
+.brainWrap{position:relative;width:200px;height:170px;display:grid;place-items:center}
+.brainWrap .halo{position:absolute;width:150px;height:150px;border-radius:50%;
+  background:radial-gradient(circle,rgba(34,211,238,.35),rgba(232,121,249,.15) 45%,transparent 70%);
+  filter:blur(18px);transition:opacity .2s}
+#brain{width:170px;height:150px;position:relative;
+  filter:drop-shadow(0 0 10px rgba(34,211,238,.8)) drop-shadow(0 0 22px rgba(232,121,249,.5))}
+.modeTitle{font-size:20px;font-weight:700;text-align:center}
+.modeChip{display:inline-flex;gap:6px;align-items:center;font-size:12px;color:var(--cyan);
+  border:1px solid rgba(34,211,238,.35);border-radius:999px;padding:4px 10px;background:rgba(34,211,238,.06)}
+#wave{width:100%;max-width:380px;height:70px;display:block;margin-top:4px}
+.playRow{display:flex;align-items:center;justify-content:center;gap:22px;margin-top:6px;width:100%}
+#play{
+  width:84px;height:84px;border-radius:50%;border:2px solid var(--cyan);
+  background:radial-gradient(circle at 30% 30%,rgba(34,211,238,.18),rgba(139,92,246,.12));
+  color:#fff;cursor:pointer;display:grid;place-items:center;
+  box-shadow:0 0 18px rgba(34,211,238,.45),inset 0 0 18px rgba(34,211,238,.15);
+  transition:transform .15s, box-shadow .2s;
+}
+#play:hover{transform:scale(1.04);box-shadow:0 0 28px rgba(34,211,238,.7),inset 0 0 22px rgba(34,211,238,.2)}
+#play:active{transform:scale(.97)}
+#play svg{width:32px;height:32px;fill:#fff}
+#play.on{border-color:var(--mag);box-shadow:0 0 22px rgba(232,121,249,.6),inset 0 0 22px rgba(232,121,249,.18)}
+.countdown{font-variant-numeric:tabular-nums;font-size:22px;font-weight:600;min-width:80px;text-align:center;color:var(--text)}
+.countdown small{display:block;font-size:11px;color:var(--muted);font-weight:500}
+.hint{font-size:12px;color:var(--muted);text-align:center;margin-top:6px;line-height:1.5}
+
+/* ---- pills ---- */
+.pills{display:flex;flex-wrap:wrap;gap:8px}
+.pill{
+  display:inline-flex;align-items:center;gap:7px;padding:9px 12px;border-radius:14px;
+  background:var(--glass);border:1px solid var(--line);color:var(--text);font-size:13px;cursor:pointer;
+  transition:all .15s;user-select:none;
+}
+.pill:hover{background:var(--glass2)}
+.pill .ic{font-size:15px}
+.pill.on{border-color:var(--cyan);background:rgba(34,211,238,.1);box-shadow:0 0 14px rgba(34,211,238,.35)}
+.pill.mag.on{border-color:var(--mag);background:rgba(232,121,249,.1);box-shadow:0 0 14px rgba(232,121,249,.35)}
+.scrollRow{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;scrollbar-width:none}
+.scrollRow::-webkit-scrollbar{display:none}
+.scrollRow .pill{white-space:nowrap;flex:0 0 auto}
+
+/* ---- info ---- */
+.info .top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.info h3{font-size:17px}
+.badge{font-size:11px;padding:4px 9px;border-radius:999px;border:1px solid;white-space:nowrap}
+.badge.alta{color:var(--ok);border-color:rgba(52,211,153,.5);background:rgba(52,211,153,.08)}
+.badge.media{color:var(--warn);border-color:rgba(251,191,36,.5);background:rgba(251,191,36,.08)}
+.info p{font-size:13.5px;line-height:1.55;color:var(--text)}
+.info .lbl{font-size:11px;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);margin:12px 0 4px}
+.info .fuente{font-size:12px;color:var(--muted);font-style:italic}
+.info .more{display:none}
+.info.open .more{display:block}
+.linkBtn{background:none;border:none;color:var(--cyan);font-size:12.5px;cursor:pointer;margin-top:10px;padding:0}
+
+/* ---- controls ---- */
+.ctl{display:flex;flex-direction:column;gap:14px}
+.row{display:flex;flex-direction:column;gap:8px}
+.row label{display:flex;justify-content:space-between;font-size:13px;color:var(--muted)}
+.row label b{color:var(--text);font-weight:600}
+input[type=range]{
+  -webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:999px;outline:none;
+  background:linear-gradient(90deg,var(--cyan),var(--mag)) 0/var(--p,50%) 100% no-repeat, rgba(255,255,255,.08);
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:#fff;
+  box-shadow:0 0 0 3px rgba(34,211,238,.35),0 0 14px rgba(34,211,238,.8);cursor:pointer;
+}
+input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:#fff;border:none;
+  box-shadow:0 0 0 3px rgba(34,211,238,.35),0 0 14px rgba(34,211,238,.8);cursor:pointer}
+.tiny{display:flex;gap:6px;flex-wrap:wrap}
+.tiny .pill{padding:6px 10px;font-size:12px}
+.sub2{display:none;margin-top:8px}
+.sub2.show{display:flex}
+
+/* ---- how ---- */
+.how p{font-size:13.5px;line-height:1.6;color:var(--text);margin-bottom:10px}
+.how ol{padding-left:18px;font-size:13px;line-height:1.6;color:var(--text)}
+.how li{margin-bottom:4px}
+.how .warn{margin-top:12px;font-size:12.5px;color:var(--warn);line-height:1.5;border-left:2px solid var(--warn);padding-left:10px}
+.noaudio{display:none;color:var(--warn);font-size:13px;text-align:center;margin-top:8px}
+footer{text-align:center;color:var(--muted);font-size:11px;margin-top:6px;line-height:1.6}
+@media (max-width:480px){.app{padding:14px 12px 50px}.card{padding:15px}}
+</style>
+</head>
+<body>
+<canvas id="stars"></canvas>
+<div class="app">
+  <header>
+    <div class="logo"><div class="dot"></div><span>NeuroFocus</span></div>
+    <div class="sub">música funcional · offline</div>
+  </header>
+
+  <!-- HERO -->
+  <section class="card hero">
+    <div class="brainWrap">
+      <div class="halo" id="halo"></div>
+      <svg id="brain" viewBox="0 0 200 170" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#22d3ee"/><stop offset=".55" stop-color="#8b5cf6"/><stop offset="1" stop-color="#e879f9"/>
+          </linearGradient>
+          <linearGradient id="g2" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="#22d3ee" stop-opacity=".9"/><stop offset="1" stop-color="#e879f9" stop-opacity=".9"/>
+          </linearGradient>
+        </defs>
+        <g fill="none" stroke="url(#g1)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M100 22 C 78 8, 44 12, 36 40 C 18 44, 14 70, 26 84 C 14 100, 24 124, 46 126 C 52 146, 80 152, 100 138"/>
+          <path d="M100 22 C 122 8, 156 12, 164 40 C 182 44, 186 70, 174 84 C 186 100, 176 124, 154 126 C 148 146, 120 152, 100 138"/>
+          <path d="M100 22 L 100 138"/>
+          <path d="M48 46 C 60 40, 72 50, 66 62 C 60 74, 78 80, 84 68"/>
+          <path d="M36 88 C 50 84, 58 96, 52 106 C 48 116, 64 122, 74 112"/>
+          <path d="M60 128 C 70 118, 84 124, 88 112"/>
+          <path d="M152 46 C 140 40, 128 50, 134 62 C 140 74, 122 80, 116 68"/>
+          <path d="M164 88 C 150 84, 142 96, 148 106 C 152 116, 136 122, 126 112"/>
+          <path d="M140 128 C 130 118, 116 124, 112 112"/>
+          <path d="M78 34 C 86 46, 82 58, 92 62"/>
+          <path d="M122 34 C 114 46, 118 58, 108 62"/>
+        </g>
+        <g fill="url(#g2)">
+          <circle cx="66" cy="62" r="2.4"/><circle cx="134" cy="62" r="2.4"/>
+          <circle cx="52" cy="106" r="2.4"/><circle cx="148" cy="106" r="2.4"/>
+          <circle cx="100" cy="80" r="3"/><circle cx="84" cy="112" r="2"/><circle cx="116" cy="112" r="2"/>
+        </g>
+        <path d="M100 138 C 96 152, 104 158, 100 168" fill="none" stroke="url(#g1)" stroke-width="2.4" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="modeTitle" id="heroTitle">Trabajo profundo</div>
+    <div class="modeChip" id="heroChip">16 Hz · beta</div>
+    <canvas id="wave" width="380" height="70"></canvas>
+    <div class="playRow">
+      <div class="countdown" id="countdown">∞<small>tiempo</small></div>
+      <button id="play" aria-label="Reproducir">
+        <svg viewBox="0 0 24 24" id="icoPlay"><path d="M8 5v14l11-7z"/></svg>
+        <svg viewBox="0 0 24 24" id="icoPause" style="display:none"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>
+      </button>
+      <div class="countdown" id="statusTxt" style="font-size:13px;color:var(--muted);font-weight:500">listo<small>estado</small></div>
+    </div>
+    <div class="hint" id="heroHint">Mínimo 6 min para que el cerebro se sincronice · efecto pleno a ~15 min</div>
+    <div class="noaudio" id="noaudio">Tu navegador no soporta Web Audio. Prueba con Chrome, Edge, Firefox o Safari actualizados.</div>
+  </section>
+
+  <!-- MODOS -->
+  <section class="card">
+    <h2>Modo</h2>
+    <div class="pills" id="modes"></div>
+  </section>
+
+  <!-- INFO -->
+  <section class="card info" id="info">
+    <div class="top"><h3 id="infoTitle"></h3><span class="badge" id="infoBadge"></span></div>
+    <div class="lbl">Para qué sirve</div>
+    <p id="infoPara"></p>
+    <div class="more">
+      <div class="lbl">Frecuencia y onda</div>
+      <p id="infoOnda"></p>
+      <div class="lbl">Evidencia</div>
+      <p id="infoEvid"></p>
+      <div class="lbl">Cómo usarlo</div>
+      <p id="infoUso"></p>
+      <div class="lbl">Fuente</div>
+      <p class="fuente" id="infoFuente"></p>
+    </div>
+    <button class="linkBtn" id="infoMore">Ver más ▾</button>
+  </section>
+
+  <!-- CONTROLES -->
+  <section class="card ctl">
+    <h2>Sonido</h2>
+    <div class="row">
+      <label><span>Mundo sonoro</span><b id="worldName"></b></label>
+      <div class="scrollRow" id="worlds"></div>
+      <div class="tiny sub2" id="noiseSub">
+        <div class="pill on" data-n="brown"><span class="ic">🟤</span>Marrón</div>
+        <div class="pill" data-n="pink"><span class="ic">🩷</span>Rosa</div>
+        <div class="pill" data-n="white"><span class="ic">⚪</span>Blanco</div>
+      </div>
+      <div class="hint" id="worldDesc" style="text-align:left;margin-top:2px"></div>
+    </div>
+    <div class="row">
+      <label><span>Volumen</span><b id="volTxt">60%</b></label>
+      <input type="range" id="vol" min="0" max="100" value="60">
+    </div>
+    <div class="row">
+      <label><span>Intensidad de los pulsos</span><b id="depthTxt">40%</b></label>
+      <input type="range" id="depth" min="0" max="100" value="40">
+    </div>
+    <div class="row">
+      <label><span>Temporizador</span><b id="timerTxt">∞</b></label>
+      <div class="tiny" id="timer">
+        <div class="pill" data-m="15">15 min</div>
+        <div class="pill" data-m="20">20 min</div>
+        <div class="pill" data-m="25">25 min</div>
+        <div class="pill" data-m="50">50 min</div>
+        <div class="pill" data-m="90">90 min</div>
+        <div class="pill on" data-m="0">∞</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CÓMO FUNCIONA -->
+  <section class="card how">
+    <h2>¿Cómo funciona?</h2>
+    <p>Tu cerebro tiene ritmos eléctricos (ondas cerebrales). Cuando estás concentrado dominan las ondas <b>beta</b> (12-20 pulsos por segundo); relajado, <b>alfa</b> (8-12); meditando, <b>theta</b> (4-8); dormido, <b>delta</b> (0.5-4). El cerebro tiende a <b>sincronizarse con ritmos externos</b>. Esta app esconde pulsos de volumen dentro de la música a la velocidad del estado que quieres, y tu actividad cerebral se engancha a ese pulso.</p>
+    <p>Lo construimos con las mismas reglas que Brain.fm publicó en su estudio de 2024 y en su patente:</p>
+    <ol>
+      <li><b>Música con pulso, no ruido:</b> la modulación va alineada al ritmo musical.</li>
+      <li><b>Solo en la banda media (200 Hz - 1 kHz):</b> donde viven los acordes; los graves y agudos quedan limpios para que no suene a "tremolo".</li>
+      <li><b>Varias velocidades a la vez:</b> una capa secundaria pulsa a una frecuencia relacionada, como en el EEG del estudio.</li>
+      <li><b>Intensidad media:</b> efectiva sin que la notes. Ajústala si quieres sentirla más.</li>
+      <li><b>Volumen + brillo + posición estéreo</b> pulsan juntos en capas distintas.</li>
+      <li><b>Sin ganchos:</b> acordes predecibles, sin melodía pegajosa, capas que entran y salen lentamente para que no te habitúes.</li>
+      <li><b>Rampas:</b> los modos de sueño bajan la velocidad poco a poco.</li>
+    </ol>
+    <div class="warn">No es un tratamiento médico ni sustituye una evaluación de TDAH, insomnio o ansiedad. Funciona con bocinas o audífonos. Si sospechas un problema de atención o de sueño, consulta a un profesional.</div>
+  </section>
+  <footer>Generado 100 % en tu navegador · sin internet · sin datos</footer>
+</div>
+
+<script>
+/* =========================================================
+   DATA
+   ========================================================= */
+const MODES = [
+ {id:'deep',nombre:'Trabajo profundo',icono:'🎯',hz:16,hz2:12,onda:'16 Hz · beta',
+  paraQue:'Tareas largas que exigen atención sostenida: programar, redactar, analizar números, trabajo que no perdona distracciones.',
+  ondaTxt:'16 pulsos por segundo (onda beta), con una capa secundaria a 12 Hz. Es la frecuencia principal del estudio de Brain.fm.',
+  evidencia:'alta',evidTxt:'Alta. Estudio revisado por pares en Communications Biology (Nature, 2024) con fMRI y EEG: mayor activación de las redes de atención y mejor rendimiento en tareas de atención sostenida. El efecto es mayor en personas con dificultad para concentrarse.',
+  uso:'Sesiones de 25 a 90 min, volumen medio-bajo. Deja pasar 6-15 min antes de juzgar si te funciona.',
+  fuente:'Woods et al., "Rapid modulation in music supports attention…", Communications Biology 2024.',mundo:'pulse',timer:50},
+ {id:'learn',nombre:'Aprendizaje y memoria',icono:'📚',hz:40,hz2:20,onda:'40 Hz · gamma',
+  paraQue:'Estudiar, leer material nuevo, memorizar, repasar antes de un examen.',
+  ondaTxt:'40 pulsos por segundo (onda gamma) con capa secundaria a 20 Hz. Es la frecuencia a la que la corteza auditiva responde con más fuerza.',
+  evidencia:'alta',evidTxt:'Alta en laboratorio. MIT (laboratorio de Li-Huei Tsai) y Scientific Reports 2025: la estimulación auditiva a 40 Hz activa regiones de atención y memoria y mejoró el rendimiento cognitivo. La mayoría de los estudios grandes son en Alzheimer; en personas sanas la evidencia es más reciente.',
+  uso:'Sesiones de 30 a 60 min mientras estudias. Volumen medio.',
+  fuente:'Picower Institute (MIT); Scientific Reports 2025, estimulación auditiva gamma.',mundo:'cine',timer:50},
+ {id:'calm',nombre:'Enfoque tranquilo',icono:'🧘',hz:14,hz2:10,onda:'14 Hz · SMR',
+  paraQue:'Trabajo que necesita calma y atención a la vez: revisar, editar, atender clientes, contestar mensajes. Ideal si te aceleras o te pones ansioso al trabajar.',
+  ondaTxt:'14 pulsos por segundo: el ritmo sensoriomotor (SMR, 12-15 Hz), "cuerpo quieto, mente despierta". Capa secundaria a 10 Hz.',
+  evidencia:'media',evidTxt:'Media. El ritmo SMR está muy estudiado en neurofeedback para TDAH, atención y sueño. La evidencia con estimulación por sonido (en vez de neurofeedback) es indirecta.',
+  uso:'Sesiones de 25 a 50 min. Volumen bajo.',
+  fuente:'Literatura de neurofeedback SMR (Sterman y sucesores).',mundo:'lofi',timer:25},
+ {id:'energy',nombre:'Energía / despertar',icono:'⚡',hz:20,hz2:16,onda:'20 Hz · beta alta',
+  paraQue:'Mañanas lentas, bajón después de comer, antes de manejar o de una reunión donde necesitas estar despierto.',
+  ondaTxt:'20 pulsos por segundo (beta alta) con capa secundaria a 16 Hz.',
+  evidencia:'media',evidTxt:'Media. Ensayo en PLOS One 2021: estimulación auditiva en rango beta redujo la fatiga subjetiva en conductores, con efecto que duró unos 100 minutos.',
+  uso:'15 a 30 min. Volumen medio. No lo uses de noche.',
+  fuente:'"Auditive beta stimulation as a countermeasure against driver fatigue", PLOS One 2021.',mundo:'pulse',timer:25},
+ {id:'creative',nombre:'Creatividad',icono:'🎨',hz:8,hz2:10,onda:'8 Hz · alfa baja',
+  paraQue:'Lluvia de ideas, diseñar, escribir sin juzgar, resolver problemas que no salen "a la fuerza".',
+  ondaTxt:'8 pulsos por segundo, en la frontera alfa-theta, con capa secundaria a 10 Hz. El estado alfa se asocia con pensamiento divergente e "insight".',
+  evidencia:'media',evidTxt:'Media. La actividad alfa se relaciona de forma consistente con creatividad y pensamiento divergente en EEG; Brain.fm usa un patrón alfa para su modo creativo. Faltan ensayos grandes de estimulación auditiva y creatividad.',
+  uso:'20 a 45 min. Volumen bajo-medio.',
+  fuente:'Revisiones EEG sobre alfa y pensamiento divergente; Brain.fm "Creative Flow".',mundo:'crystal',timer:25},
+ {id:'relax',nombre:'Relajación',icono:'🌿',hz:10,hz2:8,onda:'10 Hz · alfa',
+  paraQue:'Bajar el estrés después del trabajo, ansiedad situacional, pausa de media tarde.',
+  ondaTxt:'10 pulsos por segundo (onda alfa), con capa secundaria a 8 Hz. Alfa es el marcador EEG de relajación más consistente.',
+  evidencia:'media',evidTxt:'Media-alta. Ensayo controlado: 20 min de estimulación a 10 Hz redujeron la ansiedad ante estrés (con estimulación eléctrica, no sonora). Los sonidos de naturaleza tienen además evidencia propia de reducción de presión arterial y ritmo cardíaco (meta-análisis 2024).',
+  uso:'15 a 30 min con los ojos cerrados o haciendo algo ligero. Volumen bajo.',
+  fuente:'Alpha-tACS y ansiedad (PMC 2025); meta-análisis sonidos naturales, Stress 2024.',mundo:'rainpad',timer:25},
+ {id:'meditate',nombre:'Meditación',icono:'🕉️',hz:6,hz2:4,onda:'6 Hz · theta',
+  paraQue:'Meditar, respirar, introspección, mindfulness.',
+  ondaTxt:'6 pulsos por segundo (onda theta) con capa secundaria a 4 Hz. Aumenta la theta frontal asociada a estados meditativos.',
+  evidencia:'alta',evidTxt:'Alta. PLOS One 2025 (más de 200 personas): exposición breve a 6 Hz aumentó la calma y el enfoque. Frontiers 2017: la theta frontal sube en 5 min y llega a su pico a los 10-15 min.',
+  uso:'10 a 20 min sentado. Volumen bajo. El pico del efecto llega a los 10-15 min: no lo cortes antes.',
+  fuente:'PLOS One 2025, binaural theta y estados meditativos; Frontiers in Neuroscience 2017.',mundo:'oceandrone',timer:15},
+ {id:'sleep',nombre:'Conciliar el sueño / siesta',icono:'🌙',hz:10,hz2:null,rampa:{from:10,to:3,min:15},onda:'10 → 3 Hz · rampa',
+  paraQue:'Quedarte dormido más rápido, o siestas de 20 minutos.',
+  ondaTxt:'Empieza en 10 pulsos por segundo (alfa, relajación) y baja gradualmente a 3 Hz (delta) en 15 minutos, acompañando la transición al sueño.',
+  evidencia:'media',evidTxt:'Media. Estudio piloto 2022: estimulación auditiva delta redujo el tiempo para dormirse y los despertares nocturnos. Muestra pequeña. La rampa gradual es el método descrito en la patente de Brain.fm.',
+  uso:'Siesta: temporizador 20 min. Noche: 30 min. Volumen muy bajo, apenas audible.',
+  fuente:'Dabiri et al., Digital Health 2022; patente US 7,674,224 (protocolos con rampa).',mundo:'rainpad',timer:20},
+ {id:'deepsleep',nombre:'Sueño profundo',icono:'😴',hz:3,hz2:null,rampa:{from:3,to:0.8,min:20},onda:'3 → 0.8 Hz · rampa',
+  paraQue:'Dejarlo toda la noche a volumen muy bajo para reforzar las ondas lentas del sueño profundo.',
+  ondaTxt:'Baja de 3 Hz a 0.8 Hz en 20 minutos y se queda ahí. 0.8 Hz es la frecuencia de las oscilaciones lentas del sueño profundo.',
+  evidencia:'alta',evidTxt:'Alta. Ngo et al. 2013 y varios estudios posteriores: pulsos de ruido rosa a ~0.8 Hz amplifican las ondas lentas y mejoran la memoria al día siguiente. Ojo: en esos estudios los pulsos se sincronizaban con EEG en tiempo real; sin eso el efecto es menor.',
+  uso:'Temporizador ∞, volumen mínimo audible. Mundo recomendado: Portador rosa (el sonido de los estudios).',
+  fuente:'Ngo, Martinetz, Born & Mölle, Neuron 2013; Papalambros et al. 2017.',mundo:'pinkcarrier',timer:0,depth:0.6},
+ {id:'mask',nombre:'Bloqueo de ruido',icono:'🔇',hz:0,hz2:null,onda:'sin pulsos',
+  paraQue:'Oficinas ruidosas, vecinos, tráfico, tapar distracciones. Solo el sonido base, sin modulación.',
+  ondaTxt:'Sin pulsos. Ruido marrón, rosa o blanco constante que enmascara el entorno.',
+  evidencia:'alta',evidTxt:'Alta para TDAH. Meta-análisis 2024 (13 estudios, 335 participantes): el ruido blanco/rosa mejora el rendimiento en personas con TDAH. Atención: en personas sin TDAH puede incluso estorbar.',
+  uso:'Lo que dure el ruido. Volumen justo por encima del ruido que quieres tapar.',
+  fuente:'Nigg et al., JAACAP 2024, meta-análisis ruido blanco/rosa y TDAH.',mundo:'noisemask',timer:0},
+];
+
+const WORLDS = [
+ {id:'pulse',nombre:'Pulso electrónico',ic:'🎛️',bpm:120,desc:'Réplica del estilo del estudio: bajo sintético, acordes en la banda media y percusión suave a 120 BPM.'},
+ {id:'lofi',nombre:'Lo-fi',ic:'📻',bpm:85,desc:'Acordes tipo piano eléctrico, ritmo suave a 85 BPM y textura de vinilo sin modular.'},
+ {id:'cine',nombre:'Cinemático',ic:'🎬',bpm:100,desc:'Pads amplios con evolución lenta y sub-bajo. Sin percusión.'},
+ {id:'drone',nombre:'Dron profundo',ic:'🌌',bpm:null,desc:'Una nota grave con armónicos y movimiento casi imperceptible.'},
+ {id:'crystal',nombre:'Cristal',ic:'💎',bpm:90,desc:'Arpegio predecible de tonos tipo campana sobre un pad suave.'},
+ {id:'rainpad',nombre:'Lluvia + Pad',ic:'🌧️',bpm:null,desc:'Pad modulado con lluvia sintetizada de fondo (sin modular).'},
+ {id:'oceandrone',nombre:'Océano + Dron',ic:'🌊',bpm:null,desc:'Dron modulado y oleaje lento cada ~8 s que acompaña la respiración.'},
+ {id:'pinkcarrier',nombre:'Portador rosa',ic:'🩷',bpm:null,desc:'Ruido rosa como portador de los pulsos: el sonido de los estudios de sueño profundo.'},
+ {id:'space',nombre:'Espacio',ic:'🪐',bpm:null,desc:'Pads muy lentos, reverb larga y posición estéreo pulsante.'},
+ {id:'noisemask',nombre:'Máscara de ruido',ic:'🔇',bpm:null,desc:'Ruido puro marrón, rosa o blanco. Sin música.'},
+];
+
+const PROGRESSIONS = [
+  [[0,'maj'],[9,'min'],[5,'maj'],[7,'maj']],
+  [[0,'min'],[8,'maj'],[3,'maj'],[10,'maj']],
+  [[0,'maj'],[7,'maj'],[9,'min'],[5,'maj']],
+  [[0,'maj7'],[5,'maj7']],
+];
+const KEYS = [45,48,50,52]; // A2, C3, D3, E3
+const CHORD = {maj:[0,4,7,12],min:[0,3,7,12],maj7:[0,4,7,11]};
+const mtof = m => 440*Math.pow(2,(m-69)/12);
+
+/* =========================================================
+   ENGINE
+   ========================================================= */
+const Engine = {
+  ctx:null, master:null, analyser:null, reverb:null, dry:null, ok:false,
+  init(){
+    if(this.ctx) return true;
+    const AC = window.AudioContext||window.webkitAudioContext;
+    if(!AC) return false;
+    this.ctx = new AC();
+    const c = this.ctx;
+    this.master = c.createGain(); this.master.gain.value = 0.6;
+    this.analyser = c.createAnalyser(); this.analyser.fftSize = 1024;
+    this.reverb = c.createConvolver(); this.reverb.buffer = this.makeIR(2.8);
+    this.revGain = c.createGain(); this.revGain.gain.value = 0.35;
+    this.reverb.connect(this.revGain).connect(this.master);
+    this.master.connect(this.analyser).connect(c.destination);
+    this.ok = true; return true;
+  },
+  makeIR(sec){
+    const c=this.ctx, n=Math.floor(c.sampleRate*sec), b=c.createBuffer(2,n,c.sampleRate);
+    for(let ch=0;ch<2;ch++){const d=b.getChannelData(ch);for(let i=0;i<n;i++){d[i]=(Math.random()*2-1)*Math.pow(1-i/n,3);}}
+    return b;
+  },
+  noiseBuffer(type){
+    const c=this.ctx, n=c.sampleRate*4, b=c.createBuffer(2,n,c.sampleRate);
+    for(let ch=0;ch<2;ch++){
+      const d=b.getChannelData(ch);
+      let b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0,last=0;
+      for(let i=0;i<n;i++){
+        const w=Math.random()*2-1;
+        if(type==='white'){d[i]=w*0.5;}
+        else if(type==='pink'){
+          b0=0.99886*b0+w*0.0555179;b1=0.99332*b1+w*0.0750759;b2=0.96900*b2+w*0.1538520;
+          b3=0.86650*b3+w*0.3104856;b4=0.55000*b4+w*0.5329522;b5=-0.7616*b5-w*0.0168980;
+          d[i]=(b0+b1+b2+b3+b4+b5+b6+w*0.5362)*0.11;b6=w*0.115926;
+        } else { last=(last+0.02*w)/1.02; d[i]=last*3.5; }
+      }
+    }
+    return b;
+  },
+  makeNoise(type){
+    const s=this.ctx.createBufferSource(); s.buffer=this.noiseBuffer(type); s.loop=true; return s;
+  }
+};
+
+/* Layer: split por banda + modulación multidimensional */
+class Layer{
+  constructor(){
+    const c=Engine.ctx; this.c=c;
+    this.input=c.createGain();
+    this.low=c.createBiquadFilter(); this.low.type='lowpass'; this.low.frequency.value=200;
+    this.mid=c.createBiquadFilter(); this.mid.type='bandpass'; this.mid.frequency.value=450; this.mid.Q.value=0.6;
+    this.high=c.createBiquadFilter(); this.high.type='highpass'; this.high.frequency.value=1000;
+    // modulación principal en banda media
+    this.mod1=c.createGain(); this.mod2=c.createGain(); this.modHi=c.createGain();
+    this.lfo1=c.createOscillator(); this.lfo1.type='sine'; this.d1=c.createGain(); this.d1.gain.value=0;
+    this.lfo2=c.createOscillator(); this.lfo2.type='sine'; this.d2=c.createGain(); this.d2.gain.value=0;
+    this.dHi=c.createGain(); this.dHi.gain.value=0;
+    this.lfo1.connect(this.d1).connect(this.mod1.gain);
+    this.lfo2.connect(this.d2).connect(this.mod2.gain);
+    this.lfo1.connect(this.dHi).connect(this.modHi.gain);
+    this.sum=c.createGain();
+    this.input.connect(this.low).connect(this.sum);
+    this.input.connect(this.mid).connect(this.mod1).connect(this.mod2).connect(this.sum);
+    this.input.connect(this.high).connect(this.modHi).connect(this.sum);
+    // filtro global con LFO en corte + deriva lenta
+    this.filt=c.createBiquadFilter(); this.filt.type='lowpass'; this.filt.frequency.value=5000; this.filt.Q.value=0.5;
+    this.fLfo=c.createOscillator(); this.fLfo.type='sine'; this.fD=c.createGain(); this.fD.gain.value=0;
+    this.fLfo.connect(this.fD).connect(this.filt.frequency);
+    this.drift=c.createOscillator(); this.drift.type='sine'; this.drift.frequency.value=0.01;
+    this.driftG=c.createGain(); this.driftG.gain.value=1200; this.drift.connect(this.driftG).connect(this.filt.frequency);
+    // paneo
+    this.pan=c.createStereoPanner?c.createStereoPanner():null;
+    this.pLfo=c.createOscillator(); this.pLfo.type='sine'; this.pD=c.createGain(); this.pD.gain.value=0;
+    this.out=c.createGain(); this.out.gain.value=0;
+    this.sum.connect(this.filt);
+    if(this.pan){ this.pLfo.connect(this.pD).connect(this.pan.pan); this.filt.connect(this.pan).connect(this.out); }
+    else this.filt.connect(this.out);
+    this.out.connect(Engine.master); this.out.connect(Engine.reverb);
+    [this.lfo1,this.lfo2,this.fLfo,this.drift,this.pLfo].forEach(o=>o.start());
+    this.depth=0.4; this.hz=16; this.hz2=12;
+  }
+  setModulation(hz,hz2,depth){
+    const c=this.c,t=c.currentTime; this.depth=depth; this.hz=hz; this.hz2=hz2;
+    const d=Math.max(0,Math.min(1,depth));
+    const on = hz>0;
+    const set=(p,v)=>{p.cancelScheduledValues(t);p.setTargetAtTime(v,t,0.05);};
+    set(this.mod1.gain, on?1-d/2:1); set(this.d1.gain, on?d/2:0);
+    const d2=(on&&hz2)?d*0.5:0; set(this.mod2.gain, 1-d2/2); set(this.d2.gain, d2/2);
+    set(this.modHi.gain, on?1-d*0.15:1); set(this.dHi.gain, on?d*0.15:0);
+    set(this.fD.gain, on?600*d:0); set(this.pD.gain, on?0.25*d:0);
+    if(on){ set(this.lfo1.frequency,hz); set(this.fLfo.frequency,hz); set(this.pLfo.frequency,hz); if(hz2) set(this.lfo2.frequency,hz2); }
+  }
+  ramp(from,to,seconds){
+    const c=this.c,t=c.currentTime;
+    [this.lfo1,this.fLfo,this.pLfo].forEach(o=>{o.frequency.cancelScheduledValues(t);o.frequency.setValueAtTime(from,t);o.frequency.linearRampToValueAtTime(to,t+seconds);});
+    this.rampInfo={from,to,seconds,t0:t};
+  }
+  currentHz(){
+    if(!this.rampInfo) return this.hz;
+    const {from,to,seconds,t0}=this.rampInfo, k=Math.min(1,(this.c.currentTime-t0)/seconds);
+    return from+(to-from)*k;
+  }
+  fadeIn(sec){const g=this.out.gain,t=this.c.currentTime;g.cancelScheduledValues(t);g.setValueAtTime(0,t);g.linearRampToValueAtTime(1,t+sec);}
+  fadeOut(sec){const g=this.out.gain,t=this.c.currentTime;g.cancelScheduledValues(t);g.setValueAtTime(g.value,t);g.linearRampToValueAtTime(0,t+sec);}
+  dispose(){try{[this.lfo1,this.lfo2,this.fLfo,this.drift,this.pLfo].forEach(o=>o.stop());}catch(e){} this.out.disconnect();}
+}
+
+/* Scheduler musical (lookahead) */
+class Scheduler{
+  constructor(bpm,onStep){this.bpm=bpm;this.onStep=onStep;this.timer=null;}
+  start(){const c=Engine.ctx;this.step=0;this.next=c.currentTime+0.05;
+    this.timer=setInterval(()=>{while(this.next<c.currentTime+0.12){this.onStep(this.step,this.next);this.next+=60/this.bpm/4;this.step++;}},25);}
+  stop(){clearInterval(this.timer);}
+}
+
+/* ---------- síntesis ---------- */
+function env(g,t,a,peak,rel,relStart){ // ataque lineal, release exponencial
+  g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(peak,t+a);
+  if(rel!=null){ g.gain.setValueAtTime(peak,relStart); g.gain.exponentialRampToValueAtTime(0.0001,relStart+rel); }
+}
+const rnd=(a,b)=>a+Math.random()*(b-a);
+
+function makePad(dest,freqs,t,attack,cut,gainV){
+  const c=Engine.ctx, g=c.createGain(), f=c.createBiquadFilter(); f.type='lowpass'; f.frequency.value=cut; f.Q.value=0.4;
+  const oscs=[];
+  freqs.forEach(fr=>{[-6,6].forEach(dt=>{const o=c.createOscillator();o.type='sawtooth';o.frequency.value=fr;o.detune.value=dt;o.connect(f);o.start(t);oscs.push(o);});});
+  f.connect(g).connect(dest);
+  g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(gainV,t+attack);
+  return {g,oscs,release(rt,rel){g.gain.cancelScheduledValues(rt);g.gain.setValueAtTime(g.gain.value||gainV,rt);g.gain.linearRampToValueAtTime(0.0001,rt+rel);oscs.forEach(o=>{try{o.stop(rt+rel+0.1)}catch(e){}});},stop(){oscs.forEach(o=>{try{o.stop()}catch(e){}});}};
+}
+function makeDrone(dest,base,t,gainV){
+  const c=Engine.ctx,g=c.createGain(),oscs=[];
+  [[1,0.22],[2,0.42],[3,0.34],[4,0.2],[5,0.1],[6,0.05]].forEach(([h,a])=>{const o=c.createOscillator();o.type='sine';o.frequency.value=base*h;const og=c.createGain();og.gain.value=a;o.connect(og).connect(g);
+    const l=c.createOscillator();l.frequency.value=rnd(0.03,0.07);const lg=c.createGain();lg.gain.value=5;l.connect(lg).connect(o.detune);l.start(t);o.start(t);oscs.push(o,l);});
+  g.connect(dest); g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(gainV,t+4);
+  return {g,oscs,release(rt,rel){g.gain.cancelScheduledValues(rt);g.gain.setValueAtTime(g.gain.value||gainV,rt);g.gain.linearRampToValueAtTime(0.0001,rt+rel);oscs.forEach(o=>{try{o.stop(rt+rel+0.1)}catch(e){}});},stop(){oscs.forEach(o=>{try{o.stop()}catch(e){}});}};
+}
+function pluck(dest,freq,t,type,dur,gainV,cut){ // nota corta (piano eléctrico / campana)
+  const c=Engine.ctx,g=c.createGain(),f=c.createBiquadFilter();f.type='lowpass';f.frequency.value=cut;
+  const o=c.createOscillator();o.type='sine';o.frequency.value=freq;o.connect(f);
+  const o2=c.createOscillator();o2.type=type==='bell'?'sine':'triangle';o2.frequency.value=freq*(type==='bell'?2.76:2);const g2=c.createGain();g2.gain.value=type==='bell'?0.25:0.18;o2.connect(g2).connect(f);
+  f.connect(g).connect(dest);
+  g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(gainV,t+0.01);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  o.start(t);o2.start(t);o.stop(t+dur+0.05);o2.stop(t+dur+0.05);
+}
+function bassNote(dest,freq,t,dur,gainV){
+  const c=Engine.ctx,g=c.createGain(),f=c.createBiquadFilter();f.type='lowpass';f.frequency.value=300;
+  const o=c.createOscillator();o.type='sawtooth';o.frequency.value=freq;o.connect(f).connect(g).connect(dest);
+  g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(gainV,t+0.02);g.gain.setValueAtTime(gainV,t+dur*0.7);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  o.start(t);o.stop(t+dur+0.05);
+}
+function kick(dest,t,gainV){
+  const c=Engine.ctx,o=c.createOscillator(),g=c.createGain();o.type='sine';
+  o.frequency.setValueAtTime(150,t);o.frequency.exponentialRampToValueAtTime(48,t+0.1);
+  g.gain.setValueAtTime(gainV,t);g.gain.exponentialRampToValueAtTime(0.0001,t+0.25);
+  o.connect(g).connect(dest);o.start(t);o.stop(t+0.3);
+}
+function hat(dest,noiseBuf,t,gainV,dur){
+  const c=Engine.ctx,s=c.createBufferSource();s.buffer=noiseBuf;const f=c.createBiquadFilter();f.type='highpass';f.frequency.value=6000;
+  const g=c.createGain();g.gain.setValueAtTime(gainV,t);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  s.connect(f).connect(g).connect(dest);s.start(t);s.stop(t+dur+0.02);
+}
+
+/* ---------- mundos ---------- */
+function buildWorld(id,layer,opts){
+  const c=Engine.ctx, W={nodes:[],timers:[],sched:null,voices:[]};
+  const TRIM={pulse:1,lofi:1.6,cine:0.65,drone:1.3,crystal:2.6,rainpad:2.0,oceandrone:0.65,pinkcarrier:0.9,space:2.0,noisemask:0.8};
+  const trim=TRIM[id]||1; layer.input.gain.value=trim;
+  const direct=c.createGain(); direct.gain.value=1; direct.connect(Engine.master); W.direct=direct; W.trim=trim; // capa SIN modular
+  const key=KEYS[Math.floor(Math.random()*KEYS.length)];
+  const prog=PROGRESSIONS[Math.floor(Math.random()*PROGRESSIONS.length)];
+  let chordIdx=0; const chordFreqs=(i)=>{const [deg,q]=prog[i%prog.length];return CHORD[q].map(s=>mtof(key+deg+s+12));};
+  const chordRoot=(i)=>mtof(key+prog[i%prog.length][0]);
+  const white=Engine.noiseBuffer('white');
+  const bpm=WORLDS.find(w=>w.id===id).bpm||60, bar=60/bpm*4;
+  let pads=[]; // crossfade de pads
+  const newPad=(t,attack,cut,gainV)=>{const p=makePad(layer.input,chordFreqs(chordIdx),t,attack,cut,gainV);pads.forEach(o=>o.release(t,bar*2));pads=[p];W.voices.push(p);chordIdx++;};
+  let hatOn=true; // anti-habituación
+  W.timers.push(setInterval(()=>{hatOn=!hatOn;},rnd(120,180)*1000));
+
+  const addNoise=(type,dest,gainV,filter)=>{const s=Engine.makeNoise(type);let n=s;if(filter){n=c.createBiquadFilter();Object.assign(n,filter.p||{});n.type=filter.type;n.frequency.value=filter.f;if(filter.q)n.Q.value=filter.q;s.connect(n);}const g=c.createGain();g.gain.value=gainV;n.connect(g).connect(dest);s.start();W.nodes.push(s);return g;};
+  const rain=(dest)=>{
+    addNoise('white',dest,0.14,{type:'bandpass',f:1600,q:0.5});
+    const drop=()=>{const t=c.currentTime+0.01,s=c.createBufferSource();s.buffer=white;const f=c.createBiquadFilter();f.type='bandpass';f.frequency.value=rnd(1800,4200);f.Q.value=0.8;const g=c.createGain();const v=rnd(0,0.05);g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(0.0001,t+0.02);s.connect(f).connect(g).connect(dest);s.start(t);s.stop(t+0.03);W.timers.push(setTimeout(drop,rnd(20,90)));};
+    drop();
+  };
+  const ocean=(dest)=>{const g=addNoise('brown',dest,0.3,{type:'lowpass',f:900});const l=c.createOscillator();l.frequency.value=0.125;const lg=c.createGain();lg.gain.value=0.35;l.connect(lg).connect(g.gain);l.start();W.nodes.push(l);};
+  const vinyl=(dest)=>{addNoise('pink',dest,0.025,{type:'lowpass',f:4000});const click=()=>{const t=c.currentTime+0.01,s=c.createBufferSource();s.buffer=white;const g=c.createGain();g.gain.setValueAtTime(rnd(0.02,0.08),t);g.gain.exponentialRampToValueAtTime(0.0001,t+0.006);s.connect(g).connect(dest);s.start(t);s.stop(t+0.01);W.timers.push(setTimeout(click,rnd(200,1500)));};click();};
+
+  switch(id){
+    case 'pulse':
+      W.sched=new Scheduler(120,(step,t)=>{
+        if(step%128===0) newPad(t,1.5,900,0.16);
+        if(step%4===0){ kick(direct,t,0.22); bassNote(layer.input,chordRoot(chordIdx-1)/2,t,0.45,0.22); }
+        if(step%2===1 && hatOn) hat(direct,white,t,0.03,0.05);
+      }); W.sched.start(); break;
+    case 'lofi':
+      vinyl(direct);
+      W.sched=new Scheduler(85,(step,t)=>{
+        if(step%128===0) newPad(t,2,700,0.13);
+        const fr=chordFreqs(Math.max(0,chordIdx-1));
+        if(step%16===0||step%16===6||step%16===10) fr.forEach((f,i)=>pluck(layer.input,f/2,t+i*0.012,'ep',1.8,0.09,1200));
+        if(step%4===0) kick(direct,t,0.07);
+        if(step%4===2 && hatOn) hat(direct,white,t,0.012,0.04);
+      }); W.sched.start(); break;
+    case 'cine':
+      W.sched=new Scheduler(100,(step,t)=>{
+        if(step%128===0){ newPad(t,4,1100,0.15); const r=chordRoot(chordIdx-1)/2; const o=c.createOscillator();o.type='sine';o.frequency.value=r;const g=c.createGain();g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(0.18,t+3);g.gain.setValueAtTime(0.18,t+bar*7);g.gain.linearRampToValueAtTime(0.0001,t+bar*8);o.connect(g).connect(direct);o.start(t);o.stop(t+bar*8+0.1);}
+      }); W.sched.start(); break;
+    case 'drone':
+      { const d=makeDrone(layer.input,mtof(key),c.currentTime+0.05,0.5); W.voices.push(d); } break;
+    case 'crystal':
+      W.sched=new Scheduler(90,(step,t)=>{
+        if(step%128===0) newPad(t,3,800,0.09);
+        const fr=chordFreqs(Math.max(0,chordIdx-1));
+        if(step%2===0 && (step%32)<16){ const i=(step/2)%fr.length; pluck(layer.input,fr[i]*(i===3?1:2),t,'bell',2.2,0.09,4000); }
+      }); W.sched.start(); break;
+    case 'rainpad':
+      rain(direct);
+      W.sched=new Scheduler(60,(step,t)=>{ if(step%128===0) newPad(t,5,700,0.14); }); W.sched.start(); break;
+    case 'oceandrone':
+      ocean(layer.input);
+      { const d=makeDrone(layer.input,mtof(key),c.currentTime+0.05,0.4); W.voices.push(d); } break;
+    case 'pinkcarrier':
+      addNoise('pink',layer.input,0.9,{type:'lowpass',f:1800}); break;
+    case 'space':
+      W.sched=new Scheduler(60,(step,t)=>{ if(step%128===0) newPad(t,7,600,0.14); }); W.sched.start();
+      Engine.revGain.gain.setTargetAtTime(0.6,c.currentTime,0.5); break;
+    case 'noisemask':
+      addNoise(opts.noise||'brown',layer.input,opts.noise==='white'?0.6:0.9,null); break;
+  }
+  if(id!=='space') Engine.revGain.gain.setTargetAtTime(0.35,c.currentTime,0.5);
+  W.stop=()=>{ if(W.sched)W.sched.stop(); W.timers.forEach(x=>{clearInterval(x);clearTimeout(x);}); W.nodes.forEach(n=>{try{n.stop()}catch(e){}}); W.voices.forEach(v=>v.stop()); direct.disconnect(); };
+  W.fadeDirect=(to,sec)=>{const g=direct.gain,t=c.currentTime;g.cancelScheduledValues(t);g.setValueAtTime(g.value,t);g.linearRampToValueAtTime(to*trim,t+sec);};
+  return W;
+}
+
+/* =========================================================
+   SESSION
+   ========================================================= */
+const Session = {
+  mode:MODES[0], world:WORLDS[0], noise:'brown', vol:0.6, depth:0.4, timerMin:0,
+  playing:false, layer:null, wobj:null, remaining:0, tick:null, onState:()=>{}, onTick:()=>{},
+  play(){
+    if(!Engine.init()){document.getElementById('noaudio').style.display='block';return;}
+    if(Engine.ctx.state==='suspended') Engine.ctx.resume();
+    this.buildCurrent(3);
+    this.playing=true;
+    if(this.timerMin>0 && this.remaining<=0) this.remaining=this.timerMin*60;
+    this.startTick(); this.onState('playing');
+  },
+  pause(){
+    if(!this.playing) return;
+    this.playing=false; this.teardown(2); clearInterval(this.tick); this.tick=null; this.onState('paused');
+  },
+  buildCurrent(fadeSec){
+    const old=this.layer, oldW=this.wobj;
+    this.layer=new Layer();
+    this.applyMode();
+    this.wobj=buildWorld(this.world.id,this.layer,{noise:this.noise});
+    this.wobj.direct.gain.setValueAtTime(0,Engine.ctx.currentTime); this.wobj.fadeDirect(1,fadeSec);
+    this.layer.fadeIn(fadeSec);
+    if(old){ old.fadeOut(1); oldW.fadeDirect(0,1); setTimeout(()=>{oldW.stop();old.dispose();},1300); }
+  },
+  teardown(fadeSec){
+    const l=this.layer,w=this.wobj; if(!l) return;
+    l.fadeOut(fadeSec); w.fadeDirect(0,fadeSec); setTimeout(()=>{w.stop();l.dispose();},fadeSec*1000+200);
+    this.layer=null; this.wobj=null;
+  },
+  applyMode(){
+    const m=this.mode; if(!this.layer) return;
+    this.layer.rampInfo=null;
+    this.layer.setModulation(m.hz,m.hz2,this.depth);
+    if(m.rampa) this.layer.ramp(m.rampa.from,m.rampa.to,m.rampa.min*60);
+  },
+  setMode(id){ this.mode=MODES.find(m=>m.id===id); if(this.playing) this.applyMode(); save(); },
+  setWorld(id){ this.world=WORLDS.find(w=>w.id===id); if(this.playing) this.buildCurrent(1); save(); },
+  setNoise(n){ this.noise=n; if(this.playing && this.world.id==='noisemask') this.buildCurrent(1); save(); },
+  setVolume(v){ this.vol=v; if(Engine.master) Engine.master.gain.setTargetAtTime(v*0.9,Engine.ctx.currentTime,0.05); save(); },
+  setDepth(d){ this.depth=d; if(this.layer&&!this.mode.rampa) this.layer.setModulation(this.mode.hz,this.mode.hz2,d); else if(this.layer){ const hz=this.layer.currentHz(); this.layer.setModulation(hz,null,d); this.layer.ramp(hz,this.mode.rampa.to,Math.max(1,this.mode.rampa.min*60-(Engine.ctx.currentTime-(this.layer.rampInfo?this.layer.rampInfo.t0:Engine.ctx.currentTime)))); } save(); },
+  setTimer(min){ this.timerMin=min; this.remaining=min>0?min*60:0; this.onTick(this.remaining); },
+  startTick(){ clearInterval(this.tick); this.tick=setInterval(()=>{ if(this.timerMin>0){ this.remaining--; this.onTick(this.remaining); if(this.remaining<=0){ this.pause(); } } },1000); },
+  currentHz(){ return this.layer?this.layer.currentHz():this.mode.hz; }
+};
+function save(){ try{ localStorage.setItem('nf',JSON.stringify({mode:Session.mode.id,world:Session.world.id,noise:Session.noise,vol:Session.vol,depth:Session.depth})); }catch(e){} }
+function load(){ try{ const s=JSON.parse(localStorage.getItem('nf')||'null'); if(!s) return null; return s; }catch(e){ return null; } }
+
+/* =========================================================
+   UI
+   ========================================================= */
+const $=id=>document.getElementById(id);
+function renderModes(){
+  const box=$('modes'); box.innerHTML='';
+  MODES.forEach(m=>{const el=document.createElement('div');el.className='pill'+(m.id===Session.mode.id?' on':'');el.dataset.id=m.id;el.innerHTML=`<span class="ic">${m.icono}</span>${m.nombre}`;
+    el.onclick=()=>{selectMode(m.id,true);};box.appendChild(el);});
+}
+function renderWorlds(){
+  const box=$('worlds'); box.innerHTML='';
+  WORLDS.forEach(w=>{const el=document.createElement('div');el.className='pill mag'+(w.id===Session.world.id?' on':'');el.dataset.id=w.id;el.innerHTML=`<span class="ic">${w.ic}</span>${w.nombre}`;
+    el.onclick=()=>{selectWorld(w.id);};box.appendChild(el);});
+}
+function selectMode(id,preset){
+  Session.setMode(id); const m=Session.mode;
+  document.querySelectorAll('#modes .pill').forEach(p=>p.classList.toggle('on',p.dataset.id===id));
+  $('heroTitle').textContent=m.nombre; $('heroChip').textContent=m.onda;
+  $('infoTitle').textContent=m.icono+' '+m.nombre; $('infoPara').textContent=m.paraQue; $('infoOnda').textContent=m.ondaTxt;
+  $('infoEvid').textContent=m.evidTxt; $('infoUso').textContent=m.uso; $('infoFuente').textContent=m.fuente;
+  const b=$('infoBadge'); b.className='badge '+m.evidencia; b.textContent=m.evidencia==='alta'?'● Evidencia alta':'● Evidencia media';
+  $('heroHint').textContent = m.rampa ? `La velocidad baja de ${m.rampa.from} a ${m.rampa.to} Hz en ${m.rampa.min} min · usa volumen muy bajo` : (m.hz===0?'Solo enmascara el entorno · sin pulsos':'Mínimo 6 min para que el cerebro se sincronice · efecto pleno a ~15 min');
+  if(preset){ selectWorld(m.mundo); selectTimer(m.timer); const d=Math.round((m.depth??0.4)*100); setRange($('depth'),d); $('depthTxt').textContent=d+'%'; Session.setDepth(d/100); }
+}
+function selectWorld(id){
+  Session.setWorld(id); const w=Session.world;
+  document.querySelectorAll('#worlds .pill').forEach(p=>p.classList.toggle('on',p.dataset.id===id));
+  $('worldName').textContent=w.nombre; $('worldDesc').textContent=w.desc;
+  $('noiseSub').classList.toggle('show',id==='noisemask');
+  const el=document.querySelector(`#worlds .pill[data-id="${id}"]`); if(el) el.scrollIntoView({block:'nearest',inline:'center',behavior:'smooth'});
+}
+function selectTimer(min){
+  Session.setTimer(min);
+  document.querySelectorAll('#timer .pill').forEach(p=>p.classList.toggle('on',+p.dataset.m===min));
+  $('timerTxt').textContent=min>0?min+' min':'∞'; renderCountdown(Session.remaining);
+}
+function renderCountdown(s){
+  const cd=$('countdown');
+  if(Session.timerMin===0){cd.innerHTML='∞<small>tiempo</small>';return;}
+  const m=Math.floor(s/60),ss=s%60; cd.innerHTML=`${m}:${ss<10?'0':''}${ss}<small>restante</small>`;
+}
+function setRange(el,v){ el.value=v; el.style.setProperty('--p',v+'%'); }
+
+Session.onTick=renderCountdown;
+Session.onState=(st)=>{
+  const on=st==='playing'; $('play').classList.toggle('on',on);
+  $('icoPlay').style.display=on?'none':'block'; $('icoPause').style.display=on?'block':'none';
+  $('statusTxt').innerHTML=(on?'sonando':'pausa')+'<small>estado</small>';
+};
+$('play').onclick=()=>{ Session.playing?Session.pause():Session.play(); };
+$('vol').oninput=e=>{const v=+e.target.value;setRange(e.target,v);$('volTxt').textContent=v+'%';Session.setVolume(v/100);};
+$('depth').oninput=e=>{const v=+e.target.value;setRange(e.target,v);$('depthTxt').textContent=v+'%';Session.setDepth(v/100);};
+$('timer').onclick=e=>{const p=e.target.closest('.pill');if(p)selectTimer(+p.dataset.m);};
+$('noiseSub').onclick=e=>{const p=e.target.closest('.pill');if(!p)return;document.querySelectorAll('#noiseSub .pill').forEach(x=>x.classList.toggle('on',x===p));Session.setNoise(p.dataset.n);};
+$('infoMore').onclick=()=>{const i=$('info');i.classList.toggle('open');$('infoMore').textContent=i.classList.contains('open')?'Ver menos ▴':'Ver más ▾';};
+
+/* init desde localStorage */
+(function(){
+  const s=load();
+  if(s){ if(MODES.find(m=>m.id===s.mode)) Session.mode=MODES.find(m=>m.id===s.mode); if(WORLDS.find(w=>w.id===s.world)) Session.world=WORLDS.find(w=>w.id===s.world); Session.noise=s.noise||'brown'; Session.vol=s.vol??0.6; Session.depth=s.depth??0.4; }
+  renderModes(); renderWorlds();
+  selectMode(Session.mode.id,false); selectWorld(Session.world.id); selectTimer(Session.mode.timer);
+  setRange($('vol'),Math.round(Session.vol*100)); $('volTxt').textContent=Math.round(Session.vol*100)+'%';
+  setRange($('depth'),Math.round(Session.depth*100)); $('depthTxt').textContent=Math.round(Session.depth*100)+'%';
+  document.querySelectorAll('#noiseSub .pill').forEach(x=>x.classList.toggle('on',x.dataset.n===Session.noise));
+  if(!(window.AudioContext||window.webkitAudioContext)) $('noaudio').style.display='block';
+})();
+
+/* =========================================================
+   VISUAL
+   ========================================================= */
+// estrellas
+(function(){
+  const cv=$('stars'),cx=cv.getContext('2d');let stars=[];
+  function size(){cv.width=innerWidth*devicePixelRatio;cv.height=innerHeight*devicePixelRatio;stars=Array.from({length:150},()=>({x:Math.random()*cv.width,y:Math.random()*cv.height,r:Math.random()*1.4+0.3,p:Math.random()*Math.PI*2,s:rnd(0.3,1.2)}));}
+  addEventListener('resize',size); size();
+  (function draw(){const t=performance.now()/1000;cx.clearRect(0,0,cv.width,cv.height);
+    stars.forEach(s=>{const a=0.35+0.35*Math.sin(t*s.s+s.p);cx.fillStyle=`rgba(180,200,255,${a})`;cx.beginPath();cx.arc(s.x,s.y,s.r*devicePixelRatio,0,7);cx.fill();});
+    requestAnimationFrame(draw);})();
+})();
+// cerebro + onda
+(function(){
+  const brain=$('brain'),halo=$('halo'),wv=$('wave'),wc=wv.getContext('2d');
+  const data=new Uint8Array(1024);
+  function rms(){ if(!Engine.analyser||!Session.playing) return 0; Engine.analyser.getByteTimeDomainData(data); let s=0; for(let i=0;i<data.length;i++){const v=(data[i]-128)/128;s+=v*v;} return Math.sqrt(s/data.length); }
+  let smooth=0;
+  (function draw(){
+    const t=performance.now()/1000, r=rms(); smooth+= (r-smooth)*0.25;
+    const breathe=0.5+0.5*Math.sin(t*2*Math.PI/4);
+    const lvl=Session.playing?Math.min(1,smooth*4):breathe*0.35;
+    const hz=Session.playing?Session.currentHz():Session.mode.hz;
+    const d=Session.depth, envNow = hz>0 ? (1-d/2)+ (d/2)*Math.sin(2*Math.PI*hz*t) : 1;
+    const glow=0.5+0.5*lvl*envNow;
+    brain.style.filter=`drop-shadow(0 0 ${6+14*glow}px rgba(34,211,238,${0.5+0.5*glow})) drop-shadow(0 0 ${14+26*glow}px rgba(232,121,249,${0.3+0.5*glow}))`;
+    brain.style.transform=`scale(${1+0.06*lvl*envNow})`;
+    halo.style.opacity=0.5+0.5*glow;
+    // onda
+    const W=wv.width,H=wv.height; wc.clearRect(0,0,W,H);
+    const win=hz>0?Math.max(0.5,4/hz):2; // segundos visibles
+    const grad=wc.createLinearGradient(0,0,W,0); grad.addColorStop(0,'#22d3ee'); grad.addColorStop(1,'#e879f9');
+    wc.strokeStyle=grad; wc.lineWidth=2; wc.shadowColor='rgba(34,211,238,.8)'; wc.shadowBlur=8;
+    wc.beginPath();
+    for(let x=0;x<=W;x++){
+      const tt=t-win+(x/W)*win;
+      const e=hz>0?((1-d/2)+(d/2)*Math.sin(2*Math.PI*hz*tt)):1;
+      const amp=Session.playing?(0.25+0.75*Math.min(1,smooth*4)):0.15;
+      const y=H/2 - (e-0.5)*H*0.8*amp;
+      x?wc.lineTo(x,y):wc.moveTo(x,y);
+    }
+    wc.stroke();
+    requestAnimationFrame(draw);
+  })();
+})();
+</script>
+</body>
+</html>
