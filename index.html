@@ -54,11 +54,12 @@ header{display:flex;align-items:center;justify-content:space-between;padding:4px
 .hero{display:flex;flex-direction:column;align-items:center;gap:8px;padding-top:12px}
 .brainStage{position:relative;width:100%;max-width:300px;height:196px;display:flex;justify-content:center}
 .brainWrap{position:relative;width:230px;height:196px;display:grid;place-items:center}
-.brainWrap .halo{position:absolute;width:172px;height:172px;border-radius:50%;
-  background:radial-gradient(circle,rgba(232,121,249,.32),rgba(34,211,238,.22) 45%,transparent 72%);
+.brainWrap .halo{position:absolute;width:180px;height:180px;border-radius:50%;
+  background:radial-gradient(circle at 35% 35%,rgba(56,189,248,.4),rgba(232,121,249,.3) 45%,rgba(251,146,60,.18) 72%,transparent 85%);
   filter:blur(20px);will-change:opacity,transform}
-#brain{width:198px;height:188px;position:relative;will-change:transform;
-  filter:drop-shadow(0 2px 10px rgba(0,0,0,.5)) drop-shadow(0 0 16px rgba(34,211,238,.35))}
+#brain{width:198px;height:188px;position:relative;will-change:transform}
+.spark{transform-box:fill-box;transform-origin:center;animation:sparkFloat 3.4s ease-in-out infinite}
+@keyframes sparkFloat{0%,100%{transform:translateY(0) scale(.7);opacity:.2}50%{transform:translateY(-5px) scale(1.2);opacity:.95}}
 .regionPill{position:absolute;display:flex;align-items:center;gap:7px;background:rgba(9,9,20,.78);
   border:1px solid rgba(255,255,255,.14);border-radius:11px;padding:5px 9px;white-space:nowrap;
   opacity:0;transform:translateY(-50%) translateX(0);transition:opacity .5s ease;pointer-events:none;
@@ -179,27 +180,18 @@ footer{text-align:center;color:var(--muted);font-size:11px;margin-top:6px;line-h
         <div class="halo" id="halo"></div>
         <svg id="brain" viewBox="0 0 200 190" xmlns="http://www.w3.org/2000/svg">
           <defs>
-            <linearGradient id="hemiL" x1="0" y1="0" x2=".85" y2="1">
-              <stop offset="0" stop-color="#fbaaf0"/><stop offset=".42" stop-color="#c86bef"/><stop offset="1" stop-color="#5b3aa8"/>
+            <linearGradient id="flameGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#38bdf8"/><stop offset=".32" stop-color="#818cf8"/><stop offset=".58" stop-color="#e879f9"/><stop offset=".8" stop-color="#fb7185"/><stop offset="1" stop-color="#fb923c"/>
             </linearGradient>
-            <linearGradient id="hemiR" x1="1" y1="0" x2=".15" y2="1">
-              <stop offset="0" stop-color="#bff3ff"/><stop offset=".42" stop-color="#34c5ee"/><stop offset="1" stop-color="#1470a6"/>
-            </linearGradient>
-            <radialGradient id="gloss" cx=".32" cy=".22" r=".55">
-              <stop offset="0" stop-color="#fff" stop-opacity=".6"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>
-            </radialGradient>
             <radialGradient id="nodeGlow">
               <stop offset="0" stop-color="#fff" stop-opacity=".95"/><stop offset=".35" stop-color="#a5f3fc" stop-opacity=".6"/><stop offset="1" stop-color="#a5f3fc" stop-opacity="0"/>
             </radialGradient>
+            <radialGradient id="sparkGrad">
+              <stop offset="0" stop-color="#fff" stop-opacity=".95"/><stop offset=".4" stop-color="currentColor" stop-opacity=".7"/><stop offset="1" stop-color="currentColor" stop-opacity="0"/>
+            </radialGradient>
             <clipPath id="brainClip"><path d="M100,14 C122,12 142,16 156,28 C170,38 180,52 182,68 C184,80 180,90 172,96 C180,104 178,116 168,124 C172,134 166,144 154,148 C150,156 140,160 130,156 C124,162 112,166 100,164 C88,166 76,162 70,156 C60,160 50,156 46,148 C34,144 28,134 32,124 C22,116 20,104 28,96 C20,90 16,80 18,68 C20,52 30,38 44,28 C58,16 78,12 100,14 Z"/></clipPath>
-            <clipPath id="clipL"><rect x="0" y="0" width="100" height="190"/></clipPath>
-            <clipPath id="clipR"><rect x="100" y="0" width="100" height="190"/></clipPath>
-          </defs>
-          <g clip-path="url(#brainClip)">
-            <path d="M100,14 C122,12 142,16 156,28 C170,38 180,52 182,68 C184,80 180,90 172,96 C180,104 178,116 168,124 C172,134 166,144 154,148 C150,156 140,160 130,156 C124,162 112,166 100,164 C88,166 76,162 70,156 C60,160 50,156 46,148 C34,144 28,134 32,124 C22,116 20,104 28,96 C20,90 16,80 18,68 C20,52 30,38 44,28 C58,16 78,12 100,14 Z" fill="url(#hemiL)" clip-path="url(#clipL)"/>
-            <path d="M100,14 C122,12 142,16 156,28 C170,38 180,52 182,68 C184,80 180,90 172,96 C180,104 178,116 168,124 C172,134 166,144 154,148 C150,156 140,160 130,156 C124,162 112,166 100,164 C88,166 76,162 70,156 C60,160 50,156 46,148 C34,144 28,134 32,124 C22,116 20,104 28,96 C20,90 16,80 18,68 C20,52 30,38 44,28 C58,16 78,12 100,14 Z" fill="url(#hemiR)" clip-path="url(#clipR)"/>
-            <rect x="0" y="0" width="200" height="190" fill="url(#gloss)"/>
-            <g stroke="#170a2e" stroke-opacity=".38" stroke-width="1.7" fill="none" stroke-linecap="round">
+            <filter id="softGlow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="2.6"/></filter>
+            <g id="gyri">
               <path d="M48 46 C 60 40, 72 50, 66 62 C 60 74, 78 80, 84 68"/>
               <path d="M36 88 C 50 84, 58 96, 52 106 C 48 116, 64 122, 74 112"/>
               <path d="M60 128 C 70 118, 84 124, 88 112"/>
@@ -208,16 +200,53 @@ footer{text-align:center;color:var(--muted);font-size:11px;margin-top:6px;line-h
               <path d="M140 128 C 130 118, 116 124, 112 112"/>
               <path d="M78 34 C 86 46, 82 58, 92 62"/>
               <path d="M122 34 C 114 46, 118 58, 108 62"/>
+              <path d="M56 26 C 66 22, 74 30, 70 40"/>
+              <path d="M144 26 C 134 22, 126 30, 130 40"/>
+              <path d="M40 66 C 48 60, 58 66, 56 76"/>
+              <path d="M160 66 C 152 60, 142 66, 144 76"/>
+              <path d="M100 30 C 96 44, 104 44, 100 58"/>
+              <path d="M88 100 C 96 94, 106 100, 104 110"/>
+              <path d="M112 100 C 104 94, 94 100, 96 110"/>
+              <path d="M30 108 C 38 104, 46 110, 42 120"/>
+              <path d="M170 108 C 162 104, 154 110, 158 120"/>
+              <path d="M70 138 C 78 132, 90 136, 92 128"/>
+              <path d="M130 138 C 122 132, 110 136, 108 128"/>
               <path d="M100,20 C97,52 103,90 99,140"/>
             </g>
-            <g stroke="#ffffff" stroke-opacity=".22" stroke-width="1" fill="none" stroke-linecap="round">
-              <path d="M46 44 C 58 38, 70 48, 64 60"/>
-              <path d="M150 44 C 138 38, 126 48, 132 60"/>
+            <g id="cereb">
+              <path d="M82 154 C 92 150, 108 150, 118 154"/>
+              <path d="M80 161 C 92 158, 108 158, 120 161"/>
+              <path d="M82 168 C 92 165, 108 165, 118 168"/>
+            </g>
+          </defs>
+          <g clip-path="url(#brainClip)">
+            <path d="M100,14 C122,12 142,16 156,28 C170,38 180,52 182,68 C184,80 180,90 172,96 C180,104 178,116 168,124 C172,134 166,144 154,148 C150,156 140,160 130,156 C124,162 112,166 100,164 C88,166 76,162 70,156 C60,160 50,156 46,148 C34,144 28,134 32,124 C22,116 20,104 28,96 C20,90 16,80 18,68 C20,52 30,38 44,28 C58,16 78,12 100,14 Z" fill="url(#flameGrad)" opacity=".16"/>
+            <g filter="url(#softGlow)" stroke="url(#flameGrad)" stroke-width="3.4" fill="none" opacity=".55" stroke-linecap="round">
+              <use href="#gyri"/>
+            </g>
+            <g stroke="url(#flameGrad)" stroke-width="1.3" fill="none" opacity=".95" stroke-linecap="round">
+              <use href="#gyri"/>
             </g>
           </g>
-          <path d="M100,14 C122,12 142,16 156,28 C170,38 180,52 182,68 C184,80 180,90 172,96 C180,104 178,116 168,124 C172,134 166,144 154,148 C150,156 140,160 130,156 C124,162 112,166 100,164 C88,166 76,162 70,156 C60,160 50,156 46,148 C34,144 28,134 32,124 C22,116 20,104 28,96 C20,90 16,80 18,68 C20,52 30,38 44,28 C58,16 78,12 100,14 Z" fill="none" stroke="rgba(255,255,255,.45)" stroke-width="1.1"/>
-          <path d="M78,148 C86,142 114,142 122,148 C132,152 130,166 118,172 C108,178 92,178 82,172 C70,166 68,152 78,148 Z" fill="url(#hemiR)" stroke="rgba(255,255,255,.35)" stroke-width="1"/>
-          <path d="M92,168 C90,176 90,184 96,188 L104,188 C110,184 110,176 108,168 Z" fill="url(#hemiR)" stroke="rgba(255,255,255,.3)" stroke-width="1"/>
+          <g filter="url(#softGlow)" opacity=".55"><path d="M100,14 C122,12 142,16 156,28 C170,38 180,52 182,68 C184,80 180,90 172,96 C180,104 178,116 168,124 C172,134 166,144 154,148 C150,156 140,160 130,156 C124,162 112,166 100,164 C88,166 76,162 70,156 C60,160 50,156 46,148 C34,144 28,134 32,124 C22,116 20,104 28,96 C20,90 16,80 18,68 C20,52 30,38 44,28 C58,16 78,12 100,14 Z" fill="none" stroke="url(#flameGrad)" stroke-width="3.6"/></g>
+          <path d="M100,14 C122,12 142,16 156,28 C170,38 180,52 182,68 C184,80 180,90 172,96 C180,104 178,116 168,124 C172,134 166,144 154,148 C150,156 140,160 130,156 C124,162 112,166 100,164 C88,166 76,162 70,156 C60,160 50,156 46,148 C34,144 28,134 32,124 C22,116 20,104 28,96 C20,90 16,80 18,68 C20,52 30,38 44,28 C58,16 78,12 100,14 Z" fill="none" stroke="url(#flameGrad)" stroke-width="1.4"/>
+          <g clip-path="url(#brainClip)">
+            <path d="M78,148 C86,142 114,142 122,148 C132,152 130,166 118,172 C108,178 92,178 82,172 C70,166 68,152 78,148 Z" fill="url(#flameGrad)" opacity=".22"/>
+          </g>
+          <g filter="url(#softGlow)" stroke="url(#flameGrad)" stroke-width="3" fill="none" opacity=".5" stroke-linecap="round"><use href="#cereb"/></g>
+          <g stroke="url(#flameGrad)" stroke-width="1.1" fill="none" opacity=".9" stroke-linecap="round"><use href="#cereb"/></g>
+          <g filter="url(#softGlow)" opacity=".5"><path d="M78,148 C86,142 114,142 122,148 C132,152 130,166 118,172 C108,178 92,178 82,172 C70,166 68,152 78,148 Z" fill="none" stroke="url(#flameGrad)" stroke-width="3"/></g>
+          <path d="M78,148 C86,142 114,142 122,148 C132,152 130,166 118,172 C108,178 92,178 82,172 C70,166 68,152 78,148 Z" fill="none" stroke="url(#flameGrad)" stroke-width="1.2"/>
+          <path d="M92,168 C90,176 90,184 96,188 L104,188 C110,184 110,176 108,168 Z" fill="url(#flameGrad)" fill-opacity=".25" stroke="url(#flameGrad)" stroke-width="1.1"/>
+          <g id="sparks" fill="none">
+            <circle cx="52" cy="10" r="4.5" fill="url(#sparkGrad)" style="color:#38bdf8;animation-delay:0s" class="spark"/>
+            <circle cx="150" cy="6" r="3.6" fill="url(#sparkGrad)" style="color:#e879f9;animation-delay:.4s" class="spark"/>
+            <circle cx="24" cy="52" r="3.2" fill="url(#sparkGrad)" style="color:#38bdf8;animation-delay:.9s" class="spark"/>
+            <circle cx="182" cy="130" r="4" fill="url(#sparkGrad)" style="color:#fb923c;animation-delay:1.3s" class="spark"/>
+            <circle cx="14" cy="100" r="3" fill="url(#sparkGrad)" style="color:#818cf8;animation-delay:1.8s" class="spark"/>
+            <circle cx="100" cy="2" r="3.4" fill="url(#sparkGrad)" style="color:#e879f9;animation-delay:2.2s" class="spark"/>
+            <circle cx="190" cy="70" r="3.2" fill="url(#sparkGrad)" style="color:#fb7185;animation-delay:2.7s" class="spark"/>
+          </g>
           <g id="brainNodes">
             <g class="node" data-id="fl" transform="translate(66,38)" style="display:none"><circle class="glow" r="15" fill="url(#nodeGlow)"/><circle class="core" r="3" fill="#fff"/></g>
             <g class="node" data-id="fr" transform="translate(134,38)" style="display:none"><circle class="glow" r="15" fill="url(#nodeGlow)"/><circle class="core" r="3" fill="#fff"/></g>
@@ -434,7 +463,7 @@ function renderRegions(id){
     const pill=document.createElement('div');
     pill.className='regionPill '+r.side;
     pill.style.top=(pos.y/190*100)+'%';
-    const dotColor=r.side==='l'?'#e879f9':'#22d3ee';
+    const dotColor=r.side==='l'?'#38bdf8':'#fb7185';
     pill.innerHTML=`<span class="rdot" style="background:${dotColor};box-shadow:0 0 6px ${dotColor}"></span><span><b>${r.label}</b><small>${r.sub}</small></span>`;
     stage.appendChild(pill);
   });
