@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>NeuroFocus</title>
+<title>AFA Focus</title>
 <style>
 :root{
   --bg:#07070f; --bg2:#0b0b1a;
@@ -182,7 +182,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;margin-top:6px;line-h
 <div id="bgGrad"></div><canvas id="stars"></canvas><canvas id="stars2"></canvas>
 <div class="app">
   <header>
-    <div class="logo"><div class="dot"></div><span>NeuroFocus</span></div>
+    <div class="logo"><span>AFA Focus</span></div>
     <div class="sub">música funcional · offline</div>
   </header>
 
@@ -406,31 +406,7 @@ function renderRegions(id){
   const stage=$('brainStage'), nodesBox=$('brainNodes'), svg=$('leaderSvg');
   stage.querySelectorAll('.regionPill').forEach(el=>el.remove());
   nodesBox.innerHTML=''; svg.innerHTML='';
-  svg.setAttribute('viewBox',`0 0 ${STAGE_W} ${STAGE_H}`); svg.removeAttribute('preserveAspectRatio');
   activeNodes=[];
-  (REGIONS[id]||[]).forEach((r,i)=>{
-    const pos=NODE_POS[r.key];
-    const dotColor0=r.side==='l'?'#38bdf8':'#fb7185';
-    const slot=PILL_SLOT[r.side], dp=dotStagePos(r.key);
-    const path=document.createElementNS('http://www.w3.org/2000/svg','path');
-    path.setAttribute('d',`M${slot.x},${slot.y} Q${(slot.x+dp.x)/2},${slot.y} ${dp.x},${dp.y}`);
-    path.setAttribute('stroke',dotColor0);
-    path.setAttribute('pathLength','1');
-    svg.appendChild(path);
-    const dot=document.createElement('div');
-    dot.className='actNode'; dot.style.left=pos.x+'%'; dot.style.top=pos.y+'%';
-    nodesBox.appendChild(dot);
-    activeNodes.push({el:dot,phase:i*0.18});
-    const pill=document.createElement('div');
-    pill.className='regionPill '+r.side;
-    pill.style.top=(slot.y/STAGE_H*100)+'%';
-    pill.innerHTML=`<span class="rdot" style="background:${dotColor0};box-shadow:0 0 6px ${dotColor0}"></span><span><b>${r.label}</b><small>${r.sub}</small></span>`;
-    stage.appendChild(pill);
-  });
-  requestAnimationFrame(()=>{
-    stage.querySelectorAll('.regionPill').forEach(p=>p.classList.add('show'));
-    svg.querySelectorAll('path').forEach(p=>p.classList.add('show'));
-  });
 }
 
 const PROGRESSIONS = [
@@ -741,7 +717,7 @@ const Session = {
   mediaSession(){
     if(!('mediaSession' in navigator)) return;
     try{
-      navigator.mediaSession.metadata=new MediaMetadata({title:this.mode.nombre,artist:'NeuroFocus',album:this.world.nombre});
+      navigator.mediaSession.metadata=new MediaMetadata({title:this.mode.nombre,artist:'AFA Focus',album:this.world.nombre});
       navigator.mediaSession.playbackState='playing';
       navigator.mediaSession.setActionHandler('play',()=>{ if(!this.playing) this.play(); });
       navigator.mediaSession.setActionHandler('pause',()=>{ this.pause(); });
