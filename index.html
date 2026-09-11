@@ -52,12 +52,16 @@ header{display:flex;align-items:center;justify-content:space-between;padding:4px
 
 /* ---- hero ---- */
 .hero{display:flex;flex-direction:column;align-items:center;gap:8px;padding-top:12px}
-.brainStage{position:relative;width:100%;max-width:300px;height:196px;display:flex;justify-content:center}
-.brainWrap{position:relative;width:230px;height:196px;display:grid;place-items:center}
-.brainWrap .halo{position:absolute;width:180px;height:180px;border-radius:50%;
-  background:radial-gradient(circle at 35% 35%,rgba(56,189,248,.4),rgba(232,121,249,.3) 45%,rgba(251,146,60,.18) 72%,transparent 85%);
+.brainStage{position:relative;width:100%;max-width:320px;height:190px;display:flex;justify-content:center}
+.brainWrap{position:relative;width:250px;height:190px;display:grid;place-items:center}
+.brainWrap .halo{position:absolute;width:200px;height:170px;border-radius:50%;
+  background:radial-gradient(circle at 30% 35%,rgba(94,234,212,.4),rgba(232,121,249,.32) 48%,rgba(251,146,60,.2) 74%,transparent 86%);
   filter:blur(20px);will-change:opacity,transform}
-#brain{width:198px;height:188px;position:relative;will-change:transform}
+#brain{width:230px;height:188px;position:relative;will-change:transform;
+  transition:transform .5s ease;animation:idleBreathe 4.2s ease-in-out infinite}
+.brainWrap.beating #brain{animation:heartbeat 1.1s ease-in-out infinite}
+@keyframes idleBreathe{0%,100%{transform:scale(1)}50%{transform:scale(1.015)}}
+@keyframes heartbeat{0%,100%{transform:scale(1)}22%{transform:scale(1.05)}38%{transform:scale(1.015)}55%{transform:scale(1.035)}75%{transform:scale(1)}}
 .spark{transform-box:fill-box;transform-origin:center;animation:sparkFloat 3.4s ease-in-out infinite}
 @keyframes sparkFloat{0%,100%{transform:translateY(0) scale(.7);opacity:.2}50%{transform:translateY(-5px) scale(1.2);opacity:.95}}
 .regionPill{position:absolute;display:flex;align-items:center;gap:7px;background:rgba(9,9,20,.78);
@@ -178,10 +182,13 @@ footer{text-align:center;color:var(--muted);font-size:11px;margin-top:6px;line-h
     <div class="brainStage" id="brainStage">
       <div class="brainWrap">
         <div class="halo" id="halo"></div>
-        <svg id="brain" viewBox="0 0 200 190" xmlns="http://www.w3.org/2000/svg">
+        <svg id="brain" viewBox="0 0 220 200" xmlns="http://www.w3.org/2000/svg">
           <defs>
-            <linearGradient id="flameGrad" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0" stop-color="#38bdf8"/><stop offset=".32" stop-color="#818cf8"/><stop offset=".58" stop-color="#e879f9"/><stop offset=".8" stop-color="#fb7185"/><stop offset="1" stop-color="#fb923c"/>
+            <linearGradient id="cerebGrad" x1="0" y1="0" x2="1" y2=".2">
+              <stop offset="0" stop-color="#5eead4"/><stop offset=".22" stop-color="#22d3ee"/><stop offset=".46" stop-color="#67e8f9"/><stop offset=".58" stop-color="#e9a8f4"/><stop offset="1" stop-color="#e879f9"/>
+            </linearGradient>
+            <linearGradient id="cerebellumGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#fde68a"/><stop offset="1" stop-color="#f97316"/>
             </linearGradient>
             <radialGradient id="nodeGlow">
               <stop offset="0" stop-color="#fff" stop-opacity=".95"/><stop offset=".35" stop-color="#a5f3fc" stop-opacity=".6"/><stop offset="1" stop-color="#a5f3fc" stop-opacity="0"/>
@@ -189,70 +196,81 @@ footer{text-align:center;color:var(--muted);font-size:11px;margin-top:6px;line-h
             <radialGradient id="sparkGrad">
               <stop offset="0" stop-color="#fff" stop-opacity=".95"/><stop offset=".4" stop-color="currentColor" stop-opacity=".7"/><stop offset="1" stop-color="currentColor" stop-opacity="0"/>
             </radialGradient>
-            <clipPath id="brainClip"><path d="M100,14 C122,12 142,16 156,28 C170,38 180,52 182,68 C184,80 180,90 172,96 C180,104 178,116 168,124 C172,134 166,144 154,148 C150,156 140,160 130,156 C124,162 112,166 100,164 C88,166 76,162 70,156 C60,160 50,156 46,148 C34,144 28,134 32,124 C22,116 20,104 28,96 C20,90 16,80 18,68 C20,52 30,38 44,28 C58,16 78,12 100,14 Z"/></clipPath>
-            <filter id="softGlow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="2.6"/></filter>
-            <g id="gyri">
-              <path d="M48 46 C 60 40, 72 50, 66 62 C 60 74, 78 80, 84 68"/>
-              <path d="M36 88 C 50 84, 58 96, 52 106 C 48 116, 64 122, 74 112"/>
-              <path d="M60 128 C 70 118, 84 124, 88 112"/>
-              <path d="M152 46 C 140 40, 128 50, 134 62 C 140 74, 122 80, 116 68"/>
-              <path d="M164 88 C 150 84, 142 96, 148 106 C 152 116, 136 122, 126 112"/>
-              <path d="M140 128 C 130 118, 116 124, 112 112"/>
-              <path d="M78 34 C 86 46, 82 58, 92 62"/>
-              <path d="M122 34 C 114 46, 118 58, 108 62"/>
-              <path d="M56 26 C 66 22, 74 30, 70 40"/>
-              <path d="M144 26 C 134 22, 126 30, 130 40"/>
-              <path d="M40 66 C 48 60, 58 66, 56 76"/>
-              <path d="M160 66 C 152 60, 142 66, 144 76"/>
-              <path d="M100 30 C 96 44, 104 44, 100 58"/>
-              <path d="M88 100 C 96 94, 106 100, 104 110"/>
-              <path d="M112 100 C 104 94, 94 100, 96 110"/>
-              <path d="M30 108 C 38 104, 46 110, 42 120"/>
-              <path d="M170 108 C 162 104, 154 110, 158 120"/>
-              <path d="M70 138 C 78 132, 90 136, 92 128"/>
-              <path d="M130 138 C 122 132, 110 136, 108 128"/>
-              <path d="M100,20 C97,52 103,90 99,140"/>
+            <filter id="softGlow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="3.2"/></filter>
+            <path id="cerebrumPath" d="M20,70 C10,48 20,26 52,20 C86,8 148,12 176,34 C202,44 206,72 188,90 C198,108 184,126 154,122 C158,140 130,150 106,140 C100,155 66,156 56,138 C28,142 12,120 20,96 C8,88 8,78 20,70 Z"/>
+            <path id="cerebellumPath" d="M130,96 C148,86 174,88 186,104 C198,118 194,138 176,146 C158,154 136,150 126,136 C118,124 120,108 130,96 Z"/>
+            <path id="stemPath" d="M146,144 C142,153 144,163 154,169 L164,165 C168,156 166,147 158,141 Z"/>
+            <g id="ridges">
+              <path d="M45,40 C52,33 60,36 64,45"/>
+              <path d="M75,32 C81,27 87,31 91,35"/>
+              <path d="M105,26 C113,22 117,23 125,35"/>
+              <path d="M135,30 C143,24 151,26 156,34"/>
+              <path d="M160,42 C167,35 173,43 177,48"/>
+              <path d="M35,65 C44,59 49,61 51,68"/>
+              <path d="M65,58 C74,52 78,58 84,62"/>
+              <path d="M95,52 C104,47 108,51 114,60"/>
+              <path d="M125,54 C134,47 141,51 144,61"/>
+              <path d="M155,64 C162,58 167,64 176,70"/>
+              <path d="M40,90 C49,87 54,90 56,97"/>
+              <path d="M70,85 C79,82 85,83 88,92"/>
+              <path d="M100,80 C106,74 113,77 116,87"/>
+              <path d="M130,82 C137,75 144,83 146,87"/>
+              <path d="M55,115 C62,111 71,112 72,119"/>
+              <path d="M85,112 C92,106 99,110 101,117"/>
+              <path d="M112,108 C119,103 128,108 131,114"/>
+              <path d="M50,135 C58,129 62,135 66,137"/>
+              <path d="M78,132 C85,125 91,128 94,135"/>
+              <path d="M100,128 C106,122 112,129 120,131"/>
+              <path d="M60,16 C68,11 76,15 79,22"/>
+              <path d="M90,12 C97,7 105,13 107,16"/>
+              <path d="M120,14 C126,10 135,10 142,23"/>
+              <path d="M150,18 C159,13 163,14 169,20"/>
+              <path d="M175,48 C182,41 187,47 194,56"/>
+              <path d="M185,60 C193,55 199,60 204,64"/>
+              <path d="M180,78 C190,75 195,78 198,82"/>
+              <path d="M30,45 C37,37 45,43 51,50"/>
+              <path d="M30,105 C40,101 42,102 51,110"/>
             </g>
-            <g id="cereb">
-              <path d="M82 154 C 92 150, 108 150, 118 154"/>
-              <path d="M80 161 C 92 158, 108 158, 120 161"/>
-              <path d="M82 168 C 92 165, 108 165, 118 168"/>
+            <g id="cerebRidges">
+              <path d="M134,108 C148,102 166,104 176,112"/>
+              <path d="M130,120 C146,116 166,118 178,126"/>
+              <path d="M132,132 C148,130 164,132 174,138"/>
             </g>
           </defs>
-          <g clip-path="url(#brainClip)">
-            <path d="M100,14 C122,12 142,16 156,28 C170,38 180,52 182,68 C184,80 180,90 172,96 C180,104 178,116 168,124 C172,134 166,144 154,148 C150,156 140,160 130,156 C124,162 112,166 100,164 C88,166 76,162 70,156 C60,160 50,156 46,148 C34,144 28,134 32,124 C22,116 20,104 28,96 C20,90 16,80 18,68 C20,52 30,38 44,28 C58,16 78,12 100,14 Z" fill="url(#flameGrad)" opacity=".16"/>
-            <g filter="url(#softGlow)" stroke="url(#flameGrad)" stroke-width="3.4" fill="none" opacity=".55" stroke-linecap="round">
-              <use href="#gyri"/>
-            </g>
-            <g stroke="url(#flameGrad)" stroke-width="1.3" fill="none" opacity=".95" stroke-linecap="round">
-              <use href="#gyri"/>
-            </g>
+          <g clip-path="url(#cerebellumClip)"><use href="#cerebellumPath" fill="url(#cerebellumGrad)"/></g>
+          <clipPath id="cerebellumClip"><use href="#cerebellumPath"/></clipPath>
+          <g clip-path="url(#cerebellumClip)">
+            <g stroke="#fff7ed" stroke-width="1" fill="none" opacity=".5" stroke-linecap="round"><use href="#cerebRidges"/></g>
           </g>
-          <g filter="url(#softGlow)" opacity=".55"><path d="M100,14 C122,12 142,16 156,28 C170,38 180,52 182,68 C184,80 180,90 172,96 C180,104 178,116 168,124 C172,134 166,144 154,148 C150,156 140,160 130,156 C124,162 112,166 100,164 C88,166 76,162 70,156 C60,160 50,156 46,148 C34,144 28,134 32,124 C22,116 20,104 28,96 C20,90 16,80 18,68 C20,52 30,38 44,28 C58,16 78,12 100,14 Z" fill="none" stroke="url(#flameGrad)" stroke-width="3.6"/></g>
-          <path d="M100,14 C122,12 142,16 156,28 C170,38 180,52 182,68 C184,80 180,90 172,96 C180,104 178,116 168,124 C172,134 166,144 154,148 C150,156 140,160 130,156 C124,162 112,166 100,164 C88,166 76,162 70,156 C60,160 50,156 46,148 C34,144 28,134 32,124 C22,116 20,104 28,96 C20,90 16,80 18,68 C20,52 30,38 44,28 C58,16 78,12 100,14 Z" fill="none" stroke="url(#flameGrad)" stroke-width="1.4"/>
-          <g clip-path="url(#brainClip)">
-            <path d="M78,148 C86,142 114,142 122,148 C132,152 130,166 118,172 C108,178 92,178 82,172 C70,166 68,152 78,148 Z" fill="url(#flameGrad)" opacity=".22"/>
+          <g filter="url(#softGlow)" opacity=".5"><use href="#cerebellumPath" fill="none" stroke="url(#cerebellumGrad)" stroke-width="3"/></g>
+          <use href="#cerebellumPath" fill="none" stroke="url(#cerebellumGrad)" stroke-width="1.1" opacity=".85"/>
+          <g filter="url(#softGlow)" opacity=".5"><use href="#stemPath" fill="url(#cerebellumGrad)"/></g>
+          <use href="#stemPath" fill="url(#cerebellumGrad)" stroke="#fff7ed" stroke-width=".8" stroke-opacity=".4"/>
+          <g clip-path="url(#brainClip2)">
+            <use href="#cerebrumPath" fill="url(#cerebGrad)"/>
           </g>
-          <g filter="url(#softGlow)" stroke="url(#flameGrad)" stroke-width="3" fill="none" opacity=".5" stroke-linecap="round"><use href="#cereb"/></g>
-          <g stroke="url(#flameGrad)" stroke-width="1.1" fill="none" opacity=".9" stroke-linecap="round"><use href="#cereb"/></g>
-          <g filter="url(#softGlow)" opacity=".5"><path d="M78,148 C86,142 114,142 122,148 C132,152 130,166 118,172 C108,178 92,178 82,172 C70,166 68,152 78,148 Z" fill="none" stroke="url(#flameGrad)" stroke-width="3"/></g>
-          <path d="M78,148 C86,142 114,142 122,148 C132,152 130,166 118,172 C108,178 92,178 82,172 C70,166 68,152 78,148 Z" fill="none" stroke="url(#flameGrad)" stroke-width="1.2"/>
-          <path d="M92,168 C90,176 90,184 96,188 L104,188 C110,184 110,176 108,168 Z" fill="url(#flameGrad)" fill-opacity=".25" stroke="url(#flameGrad)" stroke-width="1.1"/>
+          <clipPath id="brainClip2"><use href="#cerebrumPath"/></clipPath>
+          <g clip-path="url(#brainClip2)">
+            <g filter="url(#softGlow)" stroke="#ffffff" stroke-width="2.6" fill="none" opacity=".45" stroke-linecap="round"><use href="#ridges"/></g>
+            <g stroke="#ffffff" stroke-width=".9" fill="none" opacity=".55" stroke-linecap="round"><use href="#ridges"/></g>
+            <g stroke="#0d1130" stroke-width="1.6" fill="none" opacity=".18" stroke-linecap="round" transform="translate(2,3)"><use href="#ridges"/></g>
+          </g>
+          <g filter="url(#softGlow)" opacity=".65"><use href="#cerebrumPath" fill="none" stroke="url(#cerebGrad)" stroke-width="3.4"/></g>
+          <use href="#cerebrumPath" fill="none" stroke="url(#cerebGrad)" stroke-width="1.3" opacity=".9"/>
           <g id="sparks" fill="none">
-            <circle cx="52" cy="10" r="4.5" fill="url(#sparkGrad)" style="color:#38bdf8;animation-delay:0s" class="spark"/>
-            <circle cx="150" cy="6" r="3.6" fill="url(#sparkGrad)" style="color:#e879f9;animation-delay:.4s" class="spark"/>
-            <circle cx="24" cy="52" r="3.2" fill="url(#sparkGrad)" style="color:#38bdf8;animation-delay:.9s" class="spark"/>
-            <circle cx="182" cy="130" r="4" fill="url(#sparkGrad)" style="color:#fb923c;animation-delay:1.3s" class="spark"/>
-            <circle cx="14" cy="100" r="3" fill="url(#sparkGrad)" style="color:#818cf8;animation-delay:1.8s" class="spark"/>
-            <circle cx="100" cy="2" r="3.4" fill="url(#sparkGrad)" style="color:#e879f9;animation-delay:2.2s" class="spark"/>
-            <circle cx="190" cy="70" r="3.2" fill="url(#sparkGrad)" style="color:#fb7185;animation-delay:2.7s" class="spark"/>
+            <circle cx="20" cy="16" r="3.6" fill="url(#sparkGrad)" style="color:#5eead4;animation-delay:0s" class="spark"/>
+            <circle cx="180" cy="8" r="3.2" fill="url(#sparkGrad)" style="color:#e879f9;animation-delay:.5s" class="spark"/>
+            <circle cx="4" cy="70" r="3" fill="url(#sparkGrad)" style="color:#22d3ee;animation-delay:1s" class="spark"/>
+            <circle cx="206" cy="60" r="3.4" fill="url(#sparkGrad)" style="color:#e879f9;animation-delay:1.5s" class="spark"/>
+            <circle cx="195" cy="150" r="3.2" fill="url(#sparkGrad)" style="color:#fb923c;animation-delay:2s" class="spark"/>
+            <circle cx="100" cy="0" r="2.8" fill="url(#sparkGrad)" style="color:#67e8f9;animation-delay:2.4s" class="spark"/>
           </g>
           <g id="brainNodes">
-            <g class="node" data-id="fl" transform="translate(66,38)" style="display:none"><circle class="glow" r="15" fill="url(#nodeGlow)"/><circle class="core" r="3" fill="#fff"/></g>
-            <g class="node" data-id="fr" transform="translate(134,38)" style="display:none"><circle class="glow" r="15" fill="url(#nodeGlow)"/><circle class="core" r="3" fill="#fff"/></g>
-            <g class="node" data-id="tl" transform="translate(46,95)" style="display:none"><circle class="glow" r="15" fill="url(#nodeGlow)"/><circle class="core" r="3" fill="#fff"/></g>
-            <g class="node" data-id="tr" transform="translate(154,95)" style="display:none"><circle class="glow" r="15" fill="url(#nodeGlow)"/><circle class="core" r="3" fill="#fff"/></g>
-            <g class="node" data-id="th" transform="translate(100,150)" style="display:none"><circle class="glow" r="15" fill="url(#nodeGlow)"/><circle class="core" r="3" fill="#fff"/></g>
+            <g class="node" data-id="fl" transform="translate(30,50)" style="display:none"><circle class="glow" r="14" fill="url(#nodeGlow)"/><circle class="core" r="3" fill="#fff"/></g>
+            <g class="node" data-id="fr" transform="translate(150,36)" style="display:none"><circle class="glow" r="14" fill="url(#nodeGlow)"/><circle class="core" r="3" fill="#fff"/></g>
+            <g class="node" data-id="tl" transform="translate(42,108)" style="display:none"><circle class="glow" r="14" fill="url(#nodeGlow)"/><circle class="core" r="3" fill="#fff"/></g>
+            <g class="node" data-id="tr" transform="translate(190,88)" style="display:none"><circle class="glow" r="14" fill="url(#nodeGlow)"/><circle class="core" r="3" fill="#fff"/></g>
+            <g class="node" data-id="th" transform="translate(160,140)" style="display:none"><circle class="glow" r="14" fill="url(#nodeGlow)"/><circle class="core" r="3" fill="#fff"/></g>
           </g>
         </svg>
       </div>
@@ -438,7 +456,7 @@ const WORLDS = [
 
 // Redes/regiones que la investigación citada asocia a cada modo (simplificado e ilustrativo,
 // no una resonancia en vivo). Posición de los puntos sobre el SVG del cerebro (viewBox 200x190).
-const NODE_POS = {fl:{x:66,y:38},fr:{x:134,y:38},tl:{x:46,y:95},tr:{x:154,y:95},th:{x:100,y:150}};
+const NODE_POS = {fl:{x:30,y:50},fr:{x:150,y:36},tl:{x:42,y:108},tr:{x:190,y:88},th:{x:160,y:140}};
 const REGIONS = {
  deep:      [{key:'fl',side:'l',label:'Corteza prefrontal',sub:'atención'},{key:'fr',side:'r',label:'Red ejecutiva',sub:'control'}],
  learn:     [{key:'tl',side:'l',label:'Hipocampo',sub:'memoria'},{key:'fr',side:'r',label:'Corteza auditiva',sub:'gamma'}],
@@ -462,7 +480,7 @@ function renderRegions(id){
     if(el){ el.style.display=''; activeNodes.push({glow:el.querySelector('.glow'),core:el.querySelector('.core'),phase:i*0.18}); }
     const pill=document.createElement('div');
     pill.className='regionPill '+r.side;
-    pill.style.top=(pos.y/190*100)+'%';
+    pill.style.top=(pos.y/180*100)+'%';
     const dotColor=r.side==='l'?'#38bdf8':'#fb7185';
     pill.innerHTML=`<span class="rdot" style="background:${dotColor};box-shadow:0 0 6px ${dotColor}"></span><span><b>${r.label}</b><small>${r.sub}</small></span>`;
     stage.appendChild(pill);
@@ -888,6 +906,7 @@ Session.onState=(st)=>{
   const on=st==='playing'; $('play').classList.toggle('on',on);
   $('icoPlay').style.display=on?'none':'block'; $('icoPause').style.display=on?'block':'none';
   $('statusTxt').innerHTML=(on?'sonando':'pausa')+'<small>estado</small>';
+  document.querySelector('.brainWrap').classList.toggle('beating',on); // latido suave al dar Play
   renderCountdown(Session.remaining);
 };
 $('play').onclick=()=>{ Session.playing?Session.pause():Session.play(); };
@@ -941,7 +960,7 @@ $('infoMore').onclick=()=>{const i=$('info');i.classList.toggle('open');$('infoM
     const hz=Session.playing?Session.currentHz():Session.mode.hz;
     const d=Session.depth, envNow = hz>0 ? (1-d/2)+ (d/2)*Math.sin(2*Math.PI*hz*t) : 1;
     const glow=0.5+0.5*lvl*envNow;
-    brain.style.transform=`scale(${(1+0.06*lvl*envNow).toFixed(4)})`;
+    // El escalado del cerebro ahora lo hace el CSS del latido (.beating); aquí solo el halo.
     halo.style.opacity=(0.35+0.65*glow).toFixed(3);
     halo.style.transform=`scale(${(0.9+0.35*glow).toFixed(3)})`;
     // regiones cerebrales activas: cada una "dispara" al ritmo de la modulación, con un
