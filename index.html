@@ -52,12 +52,24 @@ header{display:flex;align-items:center;justify-content:space-between;padding:4px
 
 /* ---- hero ---- */
 .hero{display:flex;flex-direction:column;align-items:center;gap:8px;padding-top:12px}
-.brainWrap{position:relative;width:200px;height:170px;display:grid;place-items:center}
-.brainWrap .halo{position:absolute;width:150px;height:150px;border-radius:50%;
-  background:radial-gradient(circle,rgba(34,211,238,.35),rgba(232,121,249,.15) 45%,transparent 70%);
-  filter:blur(18px);will-change:opacity,transform}
-#brain{width:170px;height:150px;position:relative;will-change:transform;
-  filter:drop-shadow(0 0 8px rgba(34,211,238,.75)) drop-shadow(0 0 18px rgba(232,121,249,.45))}
+.brainStage{position:relative;width:100%;max-width:300px;height:196px;display:flex;justify-content:center}
+.brainWrap{position:relative;width:230px;height:196px;display:grid;place-items:center}
+.brainWrap .halo{position:absolute;width:172px;height:172px;border-radius:50%;
+  background:radial-gradient(circle,rgba(232,121,249,.32),rgba(34,211,238,.22) 45%,transparent 72%);
+  filter:blur(20px);will-change:opacity,transform}
+#brain{width:198px;height:188px;position:relative;will-change:transform;
+  filter:drop-shadow(0 2px 10px rgba(0,0,0,.5)) drop-shadow(0 0 16px rgba(34,211,238,.35))}
+.regionPill{position:absolute;display:flex;align-items:center;gap:7px;background:rgba(9,9,20,.78);
+  border:1px solid rgba(255,255,255,.14);border-radius:11px;padding:5px 9px;white-space:nowrap;
+  opacity:0;transform:translateY(-50%) translateX(0);transition:opacity .5s ease;pointer-events:none;
+  box-shadow:0 6px 16px rgba(0,0,0,.4);z-index:2}
+.regionPill.show{opacity:1}
+.regionPill.l{left:-6px}
+.regionPill.r{right:-6px}
+.regionPill .rdot{width:7px;height:7px;border-radius:50%;flex:0 0 auto}
+.regionPill b{display:block;font-size:10.5px;font-weight:600;color:var(--text)}
+.regionPill small{display:block;font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-top:1px}
+@media (max-width:380px){.regionPill{padding:4px 7px}.regionPill b{font-size:9.5px}.regionPill small{font-size:8px}}
 .modeTitle{font-size:20px;font-weight:700;text-align:center}
 .modeChip{display:inline-flex;gap:6px;align-items:center;font-size:12px;color:var(--cyan);
   border:1px solid rgba(34,211,238,.35);border-radius:999px;padding:4px 10px;background:rgba(34,211,238,.06)}
@@ -162,37 +174,59 @@ footer{text-align:center;color:var(--muted);font-size:11px;margin-top:6px;line-h
 
   <!-- HERO -->
   <section class="card hero">
-    <div class="brainWrap">
-      <div class="halo" id="halo"></div>
-      <svg id="brain" viewBox="0 0 200 170" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stop-color="#22d3ee"/><stop offset=".55" stop-color="#8b5cf6"/><stop offset="1" stop-color="#e879f9"/>
-          </linearGradient>
-          <linearGradient id="g2" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0" stop-color="#22d3ee" stop-opacity=".9"/><stop offset="1" stop-color="#e879f9" stop-opacity=".9"/>
-          </linearGradient>
-        </defs>
-        <g fill="none" stroke="url(#g1)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M100 22 C 78 8, 44 12, 36 40 C 18 44, 14 70, 26 84 C 14 100, 24 124, 46 126 C 52 146, 80 152, 100 138"/>
-          <path d="M100 22 C 122 8, 156 12, 164 40 C 182 44, 186 70, 174 84 C 186 100, 176 124, 154 126 C 148 146, 120 152, 100 138"/>
-          <path d="M100 22 L 100 138"/>
-          <path d="M48 46 C 60 40, 72 50, 66 62 C 60 74, 78 80, 84 68"/>
-          <path d="M36 88 C 50 84, 58 96, 52 106 C 48 116, 64 122, 74 112"/>
-          <path d="M60 128 C 70 118, 84 124, 88 112"/>
-          <path d="M152 46 C 140 40, 128 50, 134 62 C 140 74, 122 80, 116 68"/>
-          <path d="M164 88 C 150 84, 142 96, 148 106 C 152 116, 136 122, 126 112"/>
-          <path d="M140 128 C 130 118, 116 124, 112 112"/>
-          <path d="M78 34 C 86 46, 82 58, 92 62"/>
-          <path d="M122 34 C 114 46, 118 58, 108 62"/>
-        </g>
-        <g fill="url(#g2)">
-          <circle cx="66" cy="62" r="2.4"/><circle cx="134" cy="62" r="2.4"/>
-          <circle cx="52" cy="106" r="2.4"/><circle cx="148" cy="106" r="2.4"/>
-          <circle cx="100" cy="80" r="3"/><circle cx="84" cy="112" r="2"/><circle cx="116" cy="112" r="2"/>
-        </g>
-        <path d="M100 138 C 96 152, 104 158, 100 168" fill="none" stroke="url(#g1)" stroke-width="2.4" stroke-linecap="round"/>
-      </svg>
+    <div class="brainStage" id="brainStage">
+      <div class="brainWrap">
+        <div class="halo" id="halo"></div>
+        <svg id="brain" viewBox="0 0 200 190" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="hemiL" x1="0" y1="0" x2=".85" y2="1">
+              <stop offset="0" stop-color="#fbaaf0"/><stop offset=".42" stop-color="#c86bef"/><stop offset="1" stop-color="#5b3aa8"/>
+            </linearGradient>
+            <linearGradient id="hemiR" x1="1" y1="0" x2=".15" y2="1">
+              <stop offset="0" stop-color="#bff3ff"/><stop offset=".42" stop-color="#34c5ee"/><stop offset="1" stop-color="#1470a6"/>
+            </linearGradient>
+            <radialGradient id="gloss" cx=".32" cy=".22" r=".55">
+              <stop offset="0" stop-color="#fff" stop-opacity=".6"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>
+            </radialGradient>
+            <radialGradient id="nodeGlow">
+              <stop offset="0" stop-color="#fff" stop-opacity=".95"/><stop offset=".35" stop-color="#a5f3fc" stop-opacity=".6"/><stop offset="1" stop-color="#a5f3fc" stop-opacity="0"/>
+            </radialGradient>
+            <clipPath id="brainClip"><path d="M100,14 C122,12 142,16 156,28 C170,38 180,52 182,68 C184,80 180,90 172,96 C180,104 178,116 168,124 C172,134 166,144 154,148 C150,156 140,160 130,156 C124,162 112,166 100,164 C88,166 76,162 70,156 C60,160 50,156 46,148 C34,144 28,134 32,124 C22,116 20,104 28,96 C20,90 16,80 18,68 C20,52 30,38 44,28 C58,16 78,12 100,14 Z"/></clipPath>
+            <clipPath id="clipL"><rect x="0" y="0" width="100" height="190"/></clipPath>
+            <clipPath id="clipR"><rect x="100" y="0" width="100" height="190"/></clipPath>
+          </defs>
+          <g clip-path="url(#brainClip)">
+            <path d="M100,14 C122,12 142,16 156,28 C170,38 180,52 182,68 C184,80 180,90 172,96 C180,104 178,116 168,124 C172,134 166,144 154,148 C150,156 140,160 130,156 C124,162 112,166 100,164 C88,166 76,162 70,156 C60,160 50,156 46,148 C34,144 28,134 32,124 C22,116 20,104 28,96 C20,90 16,80 18,68 C20,52 30,38 44,28 C58,16 78,12 100,14 Z" fill="url(#hemiL)" clip-path="url(#clipL)"/>
+            <path d="M100,14 C122,12 142,16 156,28 C170,38 180,52 182,68 C184,80 180,90 172,96 C180,104 178,116 168,124 C172,134 166,144 154,148 C150,156 140,160 130,156 C124,162 112,166 100,164 C88,166 76,162 70,156 C60,160 50,156 46,148 C34,144 28,134 32,124 C22,116 20,104 28,96 C20,90 16,80 18,68 C20,52 30,38 44,28 C58,16 78,12 100,14 Z" fill="url(#hemiR)" clip-path="url(#clipR)"/>
+            <rect x="0" y="0" width="200" height="190" fill="url(#gloss)"/>
+            <g stroke="#170a2e" stroke-opacity=".38" stroke-width="1.7" fill="none" stroke-linecap="round">
+              <path d="M48 46 C 60 40, 72 50, 66 62 C 60 74, 78 80, 84 68"/>
+              <path d="M36 88 C 50 84, 58 96, 52 106 C 48 116, 64 122, 74 112"/>
+              <path d="M60 128 C 70 118, 84 124, 88 112"/>
+              <path d="M152 46 C 140 40, 128 50, 134 62 C 140 74, 122 80, 116 68"/>
+              <path d="M164 88 C 150 84, 142 96, 148 106 C 152 116, 136 122, 126 112"/>
+              <path d="M140 128 C 130 118, 116 124, 112 112"/>
+              <path d="M78 34 C 86 46, 82 58, 92 62"/>
+              <path d="M122 34 C 114 46, 118 58, 108 62"/>
+              <path d="M100,20 C97,52 103,90 99,140"/>
+            </g>
+            <g stroke="#ffffff" stroke-opacity=".22" stroke-width="1" fill="none" stroke-linecap="round">
+              <path d="M46 44 C 58 38, 70 48, 64 60"/>
+              <path d="M150 44 C 138 38, 126 48, 132 60"/>
+            </g>
+          </g>
+          <path d="M100,14 C122,12 142,16 156,28 C170,38 180,52 182,68 C184,80 180,90 172,96 C180,104 178,116 168,124 C172,134 166,144 154,148 C150,156 140,160 130,156 C124,162 112,166 100,164 C88,166 76,162 70,156 C60,160 50,156 46,148 C34,144 28,134 32,124 C22,116 20,104 28,96 C20,90 16,80 18,68 C20,52 30,38 44,28 C58,16 78,12 100,14 Z" fill="none" stroke="rgba(255,255,255,.45)" stroke-width="1.1"/>
+          <path d="M78,148 C86,142 114,142 122,148 C132,152 130,166 118,172 C108,178 92,178 82,172 C70,166 68,152 78,148 Z" fill="url(#hemiR)" stroke="rgba(255,255,255,.35)" stroke-width="1"/>
+          <path d="M92,168 C90,176 90,184 96,188 L104,188 C110,184 110,176 108,168 Z" fill="url(#hemiR)" stroke="rgba(255,255,255,.3)" stroke-width="1"/>
+          <g id="brainNodes">
+            <g class="node" data-id="fl" transform="translate(66,38)" style="display:none"><circle class="glow" r="15" fill="url(#nodeGlow)"/><circle class="core" r="3" fill="#fff"/></g>
+            <g class="node" data-id="fr" transform="translate(134,38)" style="display:none"><circle class="glow" r="15" fill="url(#nodeGlow)"/><circle class="core" r="3" fill="#fff"/></g>
+            <g class="node" data-id="tl" transform="translate(46,95)" style="display:none"><circle class="glow" r="15" fill="url(#nodeGlow)"/><circle class="core" r="3" fill="#fff"/></g>
+            <g class="node" data-id="tr" transform="translate(154,95)" style="display:none"><circle class="glow" r="15" fill="url(#nodeGlow)"/><circle class="core" r="3" fill="#fff"/></g>
+            <g class="node" data-id="th" transform="translate(100,150)" style="display:none"><circle class="glow" r="15" fill="url(#nodeGlow)"/><circle class="core" r="3" fill="#fff"/></g>
+          </g>
+        </svg>
+      </div>
     </div>
     <div class="modeTitle" id="heroTitle">Trabajo profundo</div>
     <div class="modeChip" id="heroChip">16 Hz · beta</div>
@@ -287,6 +321,7 @@ footer{text-align:center;color:var(--muted);font-size:11px;margin-top:6px;line-h
       <li><b>Sin ganchos:</b> acordes predecibles, sin melodía pegajosa, capas que entran y salen lentamente para que no te habitúes.</li>
       <li><b>Rampas:</b> los modos de sueño bajan la velocidad poco a poco.</li>
     </ol>
+    <div class="warn">Los puntos que se iluminan sobre el cerebro representan, de forma simplificada, las redes que la investigación citada asocia a cada modo — no es una resonancia magnética en vivo ni una medición de tu actividad cerebral real.</div>
     <div class="warn">No es un tratamiento médico ni sustituye una evaluación de TDAH, insomnio o ansiedad. Funciona con bocinas o audífonos. Si sospechas un problema de atención o de sueño, consulta a un profesional.</div>
   </section>
   <footer>Generado 100 % en tu navegador · sin internet · sin datos</footer>
@@ -371,6 +406,40 @@ const WORLDS = [
  {id:'space',nombre:'Espacio',ic:'🪐',bpm:null,desc:'Pads muy lentos, reverb larga y posición estéreo pulsante.'},
  {id:'noisemask',nombre:'Máscara de ruido',ic:'🔇',bpm:null,desc:'Ruido puro marrón, rosa o blanco. Sin música.'},
 ];
+
+// Redes/regiones que la investigación citada asocia a cada modo (simplificado e ilustrativo,
+// no una resonancia en vivo). Posición de los puntos sobre el SVG del cerebro (viewBox 200x190).
+const NODE_POS = {fl:{x:66,y:38},fr:{x:134,y:38},tl:{x:46,y:95},tr:{x:154,y:95},th:{x:100,y:150}};
+const REGIONS = {
+ deep:      [{key:'fl',side:'l',label:'Corteza prefrontal',sub:'atención'},{key:'fr',side:'r',label:'Red ejecutiva',sub:'control'}],
+ learn:     [{key:'tl',side:'l',label:'Hipocampo',sub:'memoria'},{key:'fr',side:'r',label:'Corteza auditiva',sub:'gamma'}],
+ calm:      [{key:'tr',side:'r',label:'Corteza sensoriomotora',sub:'ritmo SMR'}],
+ energy:    [{key:'th',side:'l',label:'Tronco encefálico',sub:'alerta'}],
+ creative:  [{key:'fr',side:'r',label:'Red por defecto',sub:'ideas'}],
+ relax:     [{key:'tl',side:'l',label:'Sistema límbico',sub:'calma'}],
+ meditate:  [{key:'fl',side:'l',label:'Corteza frontal medial',sub:'onda theta'}],
+ sleep:     [{key:'th',side:'r',label:'Tálamo',sub:'transición'}],
+ deepsleep: [{key:'th',side:'r',label:'Tálamo',sub:'ondas lentas'},{key:'fl',side:'l',label:'Corteza',sub:'oscilación lenta'}],
+ mask:      [],
+};
+let activeNodes=[];
+function renderRegions(id){
+  const stage=$('brainStage');
+  stage.querySelectorAll('.regionPill').forEach(el=>el.remove());
+  document.querySelectorAll('#brainNodes .node').forEach(n=>{n.style.display='none';});
+  activeNodes=[];
+  (REGIONS[id]||[]).forEach((r,i)=>{
+    const pos=NODE_POS[r.key], el=document.querySelector(`#brainNodes .node[data-id="${r.key}"]`);
+    if(el){ el.style.display=''; activeNodes.push({glow:el.querySelector('.glow'),core:el.querySelector('.core'),phase:i*0.18}); }
+    const pill=document.createElement('div');
+    pill.className='regionPill '+r.side;
+    pill.style.top=(pos.y/190*100)+'%';
+    const dotColor=r.side==='l'?'#e879f9':'#22d3ee';
+    pill.innerHTML=`<span class="rdot" style="background:${dotColor};box-shadow:0 0 6px ${dotColor}"></span><span><b>${r.label}</b><small>${r.sub}</small></span>`;
+    stage.appendChild(pill);
+  });
+  requestAnimationFrame(()=>stage.querySelectorAll('.regionPill').forEach(p=>p.classList.add('show')));
+}
 
 const PROGRESSIONS = [
   [[0,'maj'],[9,'min'],[5,'maj'],[7,'maj']],
@@ -741,6 +810,7 @@ function selectMode(id,preset){
   $('infoEvid').textContent=m.evidTxt; $('infoUso').textContent=m.uso; $('infoFuente').textContent=m.fuente;
   const b=$('infoBadge'); b.className='badge '+m.evidencia; b.textContent=m.evidencia==='alta'?'● Evidencia alta':'● Evidencia media';
   $('heroHint').textContent = m.rampa ? `La velocidad baja de ${m.rampa.from} a ${m.rampa.to} Hz en ${m.rampa.min} min · usa volumen muy bajo` : (m.hz===0?'Solo enmascara el entorno · sin pulsos':'Mínimo 6 min para que el cerebro se sincronice · efecto pleno a ~15 min');
+  renderRegions(id);
   if(preset){ selectWorld(m.mundo); selectTimer(m.timer); const d=Math.round((m.depth??0.4)*100); setRange($('depth'),d); $('depthTxt').textContent=d+'%'; Session.setDepth(d/100); }
 }
 function selectWorld(id){
@@ -845,6 +915,14 @@ $('infoMore').onclick=()=>{const i=$('info');i.classList.toggle('open');$('infoM
     brain.style.transform=`scale(${(1+0.06*lvl*envNow).toFixed(4)})`;
     halo.style.opacity=(0.35+0.65*glow).toFixed(3);
     halo.style.transform=`scale(${(0.9+0.35*glow).toFixed(3)})`;
+    // regiones cerebrales activas: cada una "dispara" al ritmo de la modulación, con un
+    // pequeño desfase entre ellas para que se vea como una secuencia, no un parpadeo único.
+    activeNodes.forEach(n=>{
+      const e = hz>0 ? (1-d/2)+(d/2)*Math.sin(2*Math.PI*hz*(t-n.phase)) : 1;
+      const amt = Session.playing ? lvl*e : 0.3+0.15*breathe;
+      n.core.setAttribute('r',(2.2+2.2*amt).toFixed(2));
+      n.glow.setAttribute('opacity',(0.3+0.6*amt).toFixed(2));
+    });
     // onda
     const W=wv.width,H=wv.height; wc.clearRect(0,0,W,H);
     const win=hz>0?Math.max(0.5,4/hz):2; // segundos visibles
