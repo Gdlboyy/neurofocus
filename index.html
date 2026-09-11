@@ -63,6 +63,15 @@ header{display:flex;align-items:center;justify-content:space-between;padding:4px
   border:1px solid rgba(34,211,238,.35);border-radius:999px;padding:4px 10px;background:rgba(34,211,238,.06)}
 #wave{width:100%;max-width:380px;height:70px;display:block;margin-top:4px}
 .playRow{display:flex;align-items:center;justify-content:center;gap:22px;margin-top:6px;width:100%}
+.timerCtl{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:96px}
+.timerRow2{display:flex;align-items:center;gap:8px}
+.stepBtn{width:30px;height:30px;border-radius:10px;border:1px solid var(--line);background:var(--glass);
+  color:var(--text);font-size:16px;line-height:1;display:grid;place-items:center;cursor:pointer;user-select:none;
+  transition:border-color .15s,background-color .15s;touch-action:manipulation}
+.stepBtn:hover{background:var(--glass2);border-color:rgba(34,211,238,.4)}
+.stepBtn:active{transform:scale(.92)}
+.stepBtn[disabled]{opacity:.3;pointer-events:none}
+.timerCtl .lbl{font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted)}
 #play{
   width:84px;height:84px;border-radius:50%;border:2px solid var(--cyan);
   background:radial-gradient(circle at 30% 30%,rgba(34,211,238,.18),rgba(139,92,246,.12));
@@ -189,7 +198,14 @@ footer{text-align:center;color:var(--muted);font-size:11px;margin-top:6px;line-h
     <div class="modeChip" id="heroChip">16 Hz · beta</div>
     <canvas id="wave" width="380" height="70"></canvas>
     <div class="playRow">
-      <div class="countdown" id="countdown">∞<small>tiempo</small></div>
+      <div class="timerCtl">
+        <div class="timerRow2">
+          <button class="stepBtn" id="tMinus" type="button" aria-label="Restar tiempo">−</button>
+          <div class="countdown" id="countdown">∞<small id="countdownLbl">tiempo</small></div>
+          <button class="stepBtn" id="tPlus" type="button" aria-label="Sumar tiempo">+</button>
+        </div>
+        <div class="lbl">Temporizador</div>
+      </div>
       <button id="play" aria-label="Reproducir">
         <svg viewBox="0 0 24 24" id="icoPlay"><path d="M8 5v14l11-7z"/></svg>
         <svg viewBox="0 0 24 24" id="icoPause" style="display:none"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>
@@ -244,17 +260,6 @@ footer{text-align:center;color:var(--muted);font-size:11px;margin-top:6px;line-h
     <div class="row">
       <label><span>Intensidad de los pulsos</span><b id="depthTxt">40%</b></label>
       <input type="range" id="depth" min="0" max="100" value="40">
-    </div>
-    <div class="row">
-      <label><span>Temporizador</span><b id="timerTxt">∞</b></label>
-      <div class="tiny" id="timer">
-        <div class="pill" data-m="15">15 min</div>
-        <div class="pill" data-m="20">20 min</div>
-        <div class="pill" data-m="25">25 min</div>
-        <div class="pill" data-m="50">50 min</div>
-        <div class="pill" data-m="90">90 min</div>
-        <div class="pill on" data-m="0">∞</div>
-      </div>
     </div>
   </section>
 
@@ -393,23 +398,21 @@ const Engine = {
     this.reverb = c.createConvolver(); this.reverb.buffer = this.makeIR(2.8);
     this.revGain = c.createGain(); this.revGain.gain.value = 0.35;
     this.reverb.connect(this.revGain).connect(this.master);
-    this.master.connect(this.analyser);
-    // Salida a través de un <audio> (MediaStream): el navegador lo trata como reproductor de
-    // música, sigue sonando con la pantalla bloqueada y muestra controles en la pantalla de bloqueo.
-    this.usingElement=false;
+    // El audio real va SIEMPRE directo a los altavoces: es el camino sin cortes.
+    this.master.connect(this.analyser).connect(c.destination);
+    // Ancla silenciosa aparte (no lleva el sonido generado): un <audio> en loop con
+    // silencio puro. Su único trabajo es mantener viva la sesión de medios para que
+    // aparezcan los controles en la pantalla de bloqueo y el navegador no descarte
+    // la pestaña al bloquear el celular. Al no tocar el audio real, no puede causar cortes.
     try{
-      this.msDest=c.createMediaStreamDestination(); this.analyser.connect(this.msDest);
-      this.el=new Audio(); this.el.srcObject=this.msDest.stream; this.el.setAttribute('playsinline',''); this.usingElement=true;
-    }catch(e){ this.analyser.connect(c.destination); }
+      const silence='data:audio/wav;base64,UklGRkQDAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YSADAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgA==';
+      this.el=new Audio(silence); this.el.loop=true; this.el.volume=0; this.el.setAttribute('playsinline','');
+    }catch(e){ this.el=null; }
     this.ok = true; return true;
   },
   async ensureOutput(){
-    if(!this.usingElement) return;
-    try{ await this.el.play(); }
-    catch(e){ // si el navegador no deja reproducir el elemento, salida directa
-      try{ this.analyser.disconnect(this.msDest); }catch(_){}
-      this.analyser.connect(this.ctx.destination); this.usingElement=false;
-    }
+    if(!this.el) return;
+    try{ await this.el.play(); }catch(e){ /* algunos navegadores exigen otro gesto: no afecta al audio real */ }
   },
   makeIR(sec){
     const c=this.ctx, n=Math.floor(c.sampleRate*sec), b=c.createBuffer(2,n,c.sampleRate);
@@ -582,7 +585,7 @@ function buildWorld(id,layer,opts){
     const drop=()=>{const t=c.currentTime+0.01,s=c.createBufferSource();s.buffer=white;const f=c.createBiquadFilter();f.type='bandpass';f.frequency.value=rnd(1800,4200);f.Q.value=0.8;const g=c.createGain();const v=rnd(0,0.05);g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(0.0001,t+0.02);s.connect(f).connect(g).connect(dest);s.start(t);s.stop(t+0.03);W.timers.push(setTimeout(drop,rnd(20,90)));};
     drop();
   };
-  const ocean=(dest)=>{const g=addNoise('brown',dest,0.3,{type:'lowpass',f:900});const l=c.createOscillator();l.frequency.value=0.125;const lg=c.createGain();lg.gain.value=0.35;l.connect(lg).connect(g.gain);l.start();W.nodes.push(l);};
+  const ocean=(dest)=>{const g=addNoise('brown',dest,0.42,{type:'lowpass',f:900});g.gain.value=0.42;const l=c.createOscillator();l.frequency.value=0.125;const lg=c.createGain();lg.gain.value=0.16;l.connect(lg).connect(g.gain);l.start();W.nodes.push(l);};
   const vinyl=(dest)=>{addNoise('pink',dest,0.025,{type:'lowpass',f:4000});const click=()=>{const t=c.currentTime+0.01,s=c.createBufferSource();s.buffer=white;const g=c.createGain();g.gain.setValueAtTime(rnd(0.02,0.08),t);g.gain.exponentialRampToValueAtTime(0.0001,t+0.006);s.connect(g).connect(dest);s.start(t);s.stop(t+0.01);W.timers.push(setTimeout(click,rnd(200,1500)));};click();};
 
   switch(id){
@@ -747,15 +750,37 @@ function selectWorld(id){
   $('noiseSub').classList.toggle('show',id==='noisemask');
   const el=document.querySelector(`#worlds .pill[data-id="${id}"]`), row=$('worlds'); if(el) row.scrollTo({left:el.offsetLeft-row.clientWidth/2+el.offsetWidth/2,behavior:'smooth'});
 }
+const TIMER_STEPS=[0,5,10,15,20,25,30,40,50,60,75,90,120,150,180];
+function nearestTimerIdx(min){
+  let best=0,bd=Infinity;
+  TIMER_STEPS.forEach((v,i)=>{const d=Math.abs(v-min);if(d<bd){bd=d;best=i;}});
+  return best;
+}
 function selectTimer(min){
   Session.setTimer(min);
-  document.querySelectorAll('#timer .pill').forEach(p=>p.classList.toggle('on',+p.dataset.m===min));
-  $('timerTxt').textContent=min>0?min+' min':'∞'; renderCountdown(Session.remaining);
+  $('tMinus').disabled = min===TIMER_STEPS[0];
+  $('tPlus').disabled = min===TIMER_STEPS[TIMER_STEPS.length-1];
+  renderCountdown(Session.remaining);
 }
+function adjustTimer(dir){
+  const i=nearestTimerIdx(Session.timerMin);
+  const j=Math.max(0,Math.min(TIMER_STEPS.length-1,i+dir));
+  selectTimer(TIMER_STEPS[j]);
+}
+function holdRepeat(btn,fn){
+  let hold=null,delay=null;
+  const start=(e)=>{ e.preventDefault(); if(btn.disabled) return; fn(); clearTimeout(delay); clearInterval(hold);
+    delay=setTimeout(()=>{ hold=setInterval(()=>{ if(btn.disabled){clearInterval(hold);return;} fn(); },130); },450); };
+  const stop=()=>{ clearTimeout(delay); clearInterval(hold); };
+  btn.addEventListener('pointerdown',start);
+  ['pointerup','pointerleave','pointercancel'].forEach(ev=>btn.addEventListener(ev,stop));
+}
+holdRepeat($('tMinus'),()=>adjustTimer(-1));
+holdRepeat($('tPlus'),()=>adjustTimer(1));
 function renderCountdown(s){
-  const cd=$('countdown');
-  if(Session.timerMin===0){cd.innerHTML='∞<small>tiempo</small>';return;}
-  const m=Math.floor(s/60),ss=s%60; cd.innerHTML=`${m}:${ss<10?'0':''}${ss}<small>restante</small>`;
+  const cd=$('countdown'), tag=Session.playing?'restante':'duración';
+  if(Session.timerMin===0){cd.innerHTML=`∞<small>${Session.playing?'tiempo':'sin límite'}</small>`;return;}
+  const m=Math.floor(s/60),ss=s%60; cd.innerHTML=`${m}:${ss<10?'0':''}${ss}<small>${tag}</small>`;
 }
 function setRange(el,v){ el.value=v; el.style.setProperty('--p',v+'%'); }
 
@@ -764,11 +789,11 @@ Session.onState=(st)=>{
   const on=st==='playing'; $('play').classList.toggle('on',on);
   $('icoPlay').style.display=on?'none':'block'; $('icoPause').style.display=on?'block':'none';
   $('statusTxt').innerHTML=(on?'sonando':'pausa')+'<small>estado</small>';
+  renderCountdown(Session.remaining);
 };
 $('play').onclick=()=>{ Session.playing?Session.pause():Session.play(); };
 $('vol').oninput=e=>{const v=+e.target.value;setRange(e.target,v);$('volTxt').textContent=v+'%';Session.setVolume(v/100);};
 $('depth').oninput=e=>{const v=+e.target.value;setRange(e.target,v);$('depthTxt').textContent=v+'%';Session.setDepth(v/100);};
-$('timer').onclick=e=>{const p=e.target.closest('.pill');if(p)selectTimer(+p.dataset.m);};
 $('noiseSub').onclick=e=>{const p=e.target.closest('.pill');if(!p)return;document.querySelectorAll('#noiseSub .pill').forEach(x=>x.classList.toggle('on',x===p));Session.setNoise(p.dataset.n);};
 $('wakeSwitch').onclick=()=>{const on=!$('wakeSwitch').classList.contains('on');$('wakeSwitch').classList.toggle('on',on);Session.setWake(on);};
 document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'&&Session.playing){ Session.requestWake(); if(Engine.ctx&&Engine.ctx.state==='suspended') Engine.ctx.resume(); Engine.ensureOutput(); } });
