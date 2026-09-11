@@ -52,29 +52,38 @@ header{display:flex;align-items:center;justify-content:space-between;padding:4px
 
 /* ---- hero ---- */
 .hero{display:flex;flex-direction:column;align-items:center;gap:8px;padding-top:12px}
-.brainStage{position:relative;width:100%;max-width:320px;height:190px;display:flex;justify-content:center}
-.brainWrap{position:relative;width:250px;height:190px;display:grid;place-items:center}
-.brainWrap .halo{position:absolute;width:200px;height:170px;border-radius:50%;
+.brainStage{position:relative;width:100%;max-width:300px;height:210px;display:flex;justify-content:center}
+.brainWrap{position:relative;width:260px;height:210px;display:grid;place-items:center}
+.brainWrap .halo{position:absolute;width:210px;height:180px;border-radius:50%;
   background:radial-gradient(circle at 30% 35%,rgba(94,234,212,.4),rgba(232,121,249,.32) 48%,rgba(251,146,60,.2) 74%,transparent 86%);
   filter:blur(20px);will-change:opacity,transform}
-#brain{width:230px;height:188px;position:relative;will-change:transform;
+#brain{width:220px;height:auto;position:relative;will-change:transform;display:block;
   transition:transform .5s ease;animation:idleBreathe 4.2s ease-in-out infinite}
 .brainWrap.beating #brain{animation:heartbeat 1.1s ease-in-out infinite}
 @keyframes idleBreathe{0%,100%{transform:scale(1)}50%{transform:scale(1.015)}}
 @keyframes heartbeat{0%,100%{transform:scale(1)}22%{transform:scale(1.05)}38%{transform:scale(1.015)}55%{transform:scale(1.035)}75%{transform:scale(1)}}
-.spark{transform-box:fill-box;transform-origin:center;animation:sparkFloat 3.4s ease-in-out infinite}
-@keyframes sparkFloat{0%,100%{transform:translateY(0) scale(.7);opacity:.2}50%{transform:translateY(-5px) scale(1.2);opacity:.95}}
-.regionPill{position:absolute;display:flex;align-items:center;gap:7px;background:rgba(9,9,20,.78);
-  border:1px solid rgba(255,255,255,.14);border-radius:11px;padding:5px 9px;white-space:nowrap;
-  opacity:0;transform:translateY(-50%) translateX(0);transition:opacity .5s ease;pointer-events:none;
-  box-shadow:0 6px 16px rgba(0,0,0,.4);z-index:2}
-.regionPill.show{opacity:1}
-.regionPill.l{left:-6px}
-.regionPill.r{right:-6px}
-.regionPill .rdot{width:7px;height:7px;border-radius:50%;flex:0 0 auto}
-.regionPill b{display:block;font-size:10.5px;font-weight:600;color:var(--text)}
-.regionPill small{display:block;font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-top:1px}
-@media (max-width:380px){.regionPill{padding:4px 7px}.regionPill b{font-size:9.5px}.regionPill small{font-size:8px}}
+.brainImgBox{position:relative;display:inline-block;line-height:0}
+#brainNodes{position:absolute;inset:0;pointer-events:none}
+.actNode{position:absolute;width:16px;height:16px;border-radius:50%;transform:translate(-50%,-50%);
+  background:radial-gradient(circle,rgba(255,255,255,.95),rgba(255,255,255,.4) 45%,transparent 75%);
+  opacity:0;will-change:opacity,transform}
+.leaderSvg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;z-index:1}
+.leaderSvg path{fill:none;stroke-width:1.6;stroke-linecap:round;opacity:0;
+  stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset .6s ease .15s,opacity .35s ease .15s}
+.leaderSvg path.show{opacity:.7;stroke-dashoffset:0}
+.regionPill{position:absolute;display:flex;align-items:center;gap:6px;
+  background:linear-gradient(160deg,rgba(16,16,30,.9),rgba(10,10,20,.78));
+  border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:4px 8px 4px 7px;white-space:nowrap;
+  opacity:0;transform:translateY(-6px) scale(.94);transition:opacity .4s ease,transform .4s cubic-bezier(.2,.8,.3,1.2);
+  pointer-events:none;box-shadow:0 4px 14px rgba(0,0,0,.45);z-index:2}
+.regionPill.show{opacity:1;transform:translateY(0) scale(1)}
+.regionPill.l{left:2%}
+.regionPill.r{right:2%}
+.regionPill .rdot{width:6px;height:6px;border-radius:50%;flex:0 0 auto;animation:dotPulse 1.8s ease-in-out infinite}
+@keyframes dotPulse{0%,100%{opacity:.6;transform:scale(.85)}50%{opacity:1;transform:scale(1.15)}}
+.regionPill b{display:block;font-size:10px;font-weight:600;color:var(--text);letter-spacing:.1px}
+.regionPill small{display:block;font-size:8.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:0}
+@media (max-width:380px){.regionPill{padding:3px 6px}.regionPill b{font-size:9px}.regionPill small{font-size:7.5px}}
 .modeTitle{font-size:20px;font-weight:700;text-align:center}
 .modeChip{display:inline-flex;gap:6px;align-items:center;font-size:12px;color:var(--cyan);
   border:1px solid rgba(34,211,238,.35);border-radius:999px;padding:4px 10px;background:rgba(34,211,238,.06)}
@@ -182,97 +191,14 @@ footer{text-align:center;color:var(--muted);font-size:11px;margin-top:6px;line-h
     <div class="brainStage" id="brainStage">
       <div class="brainWrap">
         <div class="halo" id="halo"></div>
-        <svg id="brain" viewBox="0 0 220 200" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="cerebGrad" x1="0" y1="0" x2="1" y2=".2">
-              <stop offset="0" stop-color="#5eead4"/><stop offset=".22" stop-color="#22d3ee"/><stop offset=".46" stop-color="#67e8f9"/><stop offset=".58" stop-color="#e9a8f4"/><stop offset="1" stop-color="#e879f9"/>
-            </linearGradient>
-            <linearGradient id="cerebellumGrad" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0" stop-color="#fde68a"/><stop offset="1" stop-color="#f97316"/>
-            </linearGradient>
-            <radialGradient id="nodeGlow">
-              <stop offset="0" stop-color="#fff" stop-opacity=".95"/><stop offset=".35" stop-color="#a5f3fc" stop-opacity=".6"/><stop offset="1" stop-color="#a5f3fc" stop-opacity="0"/>
-            </radialGradient>
-            <radialGradient id="sparkGrad">
-              <stop offset="0" stop-color="#fff" stop-opacity=".95"/><stop offset=".4" stop-color="currentColor" stop-opacity=".7"/><stop offset="1" stop-color="currentColor" stop-opacity="0"/>
-            </radialGradient>
-            <filter id="softGlow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="3.2"/></filter>
-            <path id="cerebrumPath" d="M20,70 C10,48 20,26 52,20 C86,8 148,12 176,34 C202,44 206,72 188,90 C198,108 184,126 154,122 C158,140 130,150 106,140 C100,155 66,156 56,138 C28,142 12,120 20,96 C8,88 8,78 20,70 Z"/>
-            <path id="cerebellumPath" d="M130,96 C148,86 174,88 186,104 C198,118 194,138 176,146 C158,154 136,150 126,136 C118,124 120,108 130,96 Z"/>
-            <path id="stemPath" d="M146,144 C142,153 144,163 154,169 L164,165 C168,156 166,147 158,141 Z"/>
-            <g id="ridges">
-              <path d="M45,40 C52,33 60,36 64,45"/>
-              <path d="M75,32 C81,27 87,31 91,35"/>
-              <path d="M105,26 C113,22 117,23 125,35"/>
-              <path d="M135,30 C143,24 151,26 156,34"/>
-              <path d="M160,42 C167,35 173,43 177,48"/>
-              <path d="M35,65 C44,59 49,61 51,68"/>
-              <path d="M65,58 C74,52 78,58 84,62"/>
-              <path d="M95,52 C104,47 108,51 114,60"/>
-              <path d="M125,54 C134,47 141,51 144,61"/>
-              <path d="M155,64 C162,58 167,64 176,70"/>
-              <path d="M40,90 C49,87 54,90 56,97"/>
-              <path d="M70,85 C79,82 85,83 88,92"/>
-              <path d="M100,80 C106,74 113,77 116,87"/>
-              <path d="M130,82 C137,75 144,83 146,87"/>
-              <path d="M55,115 C62,111 71,112 72,119"/>
-              <path d="M85,112 C92,106 99,110 101,117"/>
-              <path d="M112,108 C119,103 128,108 131,114"/>
-              <path d="M50,135 C58,129 62,135 66,137"/>
-              <path d="M78,132 C85,125 91,128 94,135"/>
-              <path d="M100,128 C106,122 112,129 120,131"/>
-              <path d="M60,16 C68,11 76,15 79,22"/>
-              <path d="M90,12 C97,7 105,13 107,16"/>
-              <path d="M120,14 C126,10 135,10 142,23"/>
-              <path d="M150,18 C159,13 163,14 169,20"/>
-              <path d="M175,48 C182,41 187,47 194,56"/>
-              <path d="M185,60 C193,55 199,60 204,64"/>
-              <path d="M180,78 C190,75 195,78 198,82"/>
-              <path d="M30,45 C37,37 45,43 51,50"/>
-              <path d="M30,105 C40,101 42,102 51,110"/>
-            </g>
-            <g id="cerebRidges">
-              <path d="M134,108 C148,102 166,104 176,112"/>
-              <path d="M130,120 C146,116 166,118 178,126"/>
-              <path d="M132,132 C148,130 164,132 174,138"/>
-            </g>
-          </defs>
-          <g clip-path="url(#cerebellumClip)"><use href="#cerebellumPath" fill="url(#cerebellumGrad)"/></g>
-          <clipPath id="cerebellumClip"><use href="#cerebellumPath"/></clipPath>
-          <g clip-path="url(#cerebellumClip)">
-            <g stroke="#fff7ed" stroke-width="1" fill="none" opacity=".5" stroke-linecap="round"><use href="#cerebRidges"/></g>
-          </g>
-          <g filter="url(#softGlow)" opacity=".5"><use href="#cerebellumPath" fill="none" stroke="url(#cerebellumGrad)" stroke-width="3"/></g>
-          <use href="#cerebellumPath" fill="none" stroke="url(#cerebellumGrad)" stroke-width="1.1" opacity=".85"/>
-          <g filter="url(#softGlow)" opacity=".5"><use href="#stemPath" fill="url(#cerebellumGrad)"/></g>
-          <use href="#stemPath" fill="url(#cerebellumGrad)" stroke="#fff7ed" stroke-width=".8" stroke-opacity=".4"/>
-          <g clip-path="url(#brainClip2)">
-            <use href="#cerebrumPath" fill="url(#cerebGrad)"/>
-          </g>
-          <clipPath id="brainClip2"><use href="#cerebrumPath"/></clipPath>
-          <g clip-path="url(#brainClip2)">
-            <g filter="url(#softGlow)" stroke="#ffffff" stroke-width="2.6" fill="none" opacity=".45" stroke-linecap="round"><use href="#ridges"/></g>
-            <g stroke="#ffffff" stroke-width=".9" fill="none" opacity=".55" stroke-linecap="round"><use href="#ridges"/></g>
-            <g stroke="#0d1130" stroke-width="1.6" fill="none" opacity=".18" stroke-linecap="round" transform="translate(2,3)"><use href="#ridges"/></g>
-          </g>
-          <g filter="url(#softGlow)" opacity=".65"><use href="#cerebrumPath" fill="none" stroke="url(#cerebGrad)" stroke-width="3.4"/></g>
-          <use href="#cerebrumPath" fill="none" stroke="url(#cerebGrad)" stroke-width="1.3" opacity=".9"/>
-          <g id="sparks" fill="none">
-            <circle cx="20" cy="16" r="3.6" fill="url(#sparkGrad)" style="color:#5eead4;animation-delay:0s" class="spark"/>
-            <circle cx="180" cy="8" r="3.2" fill="url(#sparkGrad)" style="color:#e879f9;animation-delay:.5s" class="spark"/>
-            <circle cx="4" cy="70" r="3" fill="url(#sparkGrad)" style="color:#22d3ee;animation-delay:1s" class="spark"/>
-            <circle cx="206" cy="60" r="3.4" fill="url(#sparkGrad)" style="color:#e879f9;animation-delay:1.5s" class="spark"/>
-            <circle cx="195" cy="150" r="3.2" fill="url(#sparkGrad)" style="color:#fb923c;animation-delay:2s" class="spark"/>
-            <circle cx="100" cy="0" r="2.8" fill="url(#sparkGrad)" style="color:#67e8f9;animation-delay:2.4s" class="spark"/>
-          </g>
-          <g id="brainNodes">
-            <g class="node" data-id="fl" transform="translate(30,50)" style="display:none"><circle class="glow" r="14" fill="url(#nodeGlow)"/><circle class="core" r="3" fill="#fff"/></g>
-            <g class="node" data-id="fr" transform="translate(150,36)" style="display:none"><circle class="glow" r="14" fill="url(#nodeGlow)"/><circle class="core" r="3" fill="#fff"/></g>
-            <g class="node" data-id="tl" transform="translate(42,108)" style="display:none"><circle class="glow" r="14" fill="url(#nodeGlow)"/><circle class="core" r="3" fill="#fff"/></g>
-            <g class="node" data-id="tr" transform="translate(190,88)" style="display:none"><circle class="glow" r="14" fill="url(#nodeGlow)"/><circle class="core" r="3" fill="#fff"/></g>
-            <g class="node" data-id="th" transform="translate(160,140)" style="display:none"><circle class="glow" r="14" fill="url(#nodeGlow)"/><circle class="core" r="3" fill="#fff"/></g>
-          </g>
-        </svg>
+        <div class="brainImgBox">
+          <picture>
+            <source srcset="brain-photo.webp" type="image/webp">
+            <img id="brain" src="brain-photo.png" alt="Cerebro">
+          </picture>
+          <div id="brainNodes"></div>
+          <svg class="leaderSvg" id="leaderSvg" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
+        </div>
       </div>
     </div>
     <div class="modeTitle" id="heroTitle">Trabajo profundo</div>
@@ -455,8 +381,8 @@ const WORLDS = [
 ];
 
 // Redes/regiones que la investigación citada asocia a cada modo (simplificado e ilustrativo,
-// no una resonancia en vivo). Posición de los puntos sobre el SVG del cerebro (viewBox 200x190).
-const NODE_POS = {fl:{x:30,y:50},fr:{x:150,y:36},tl:{x:42,y:108},tr:{x:190,y:88},th:{x:160,y:140}};
+// no una resonancia en vivo). Posición de los puntos en % sobre la foto del cerebro.
+const NODE_POS = {fl:{x:23,y:33},fr:{x:53,y:9},tl:{x:29,y:63},tr:{x:80,y:38},th:{x:66,y:79}};
 const REGIONS = {
  deep:      [{key:'fl',side:'l',label:'Corteza prefrontal',sub:'atención'},{key:'fr',side:'r',label:'Red ejecutiva',sub:'control'}],
  learn:     [{key:'tl',side:'l',label:'Hipocampo',sub:'memoria'},{key:'fr',side:'r',label:'Corteza auditiva',sub:'gamma'}],
@@ -469,23 +395,42 @@ const REGIONS = {
  deepsleep: [{key:'th',side:'r',label:'Tálamo',sub:'ondas lentas'},{key:'fl',side:'l',label:'Corteza',sub:'oscilación lenta'}],
  mask:      [],
 };
+// Geometría fija del escenario (brainStage 300x210, imagen 220x200 centrada) para poder
+// dibujar la línea que conecta cada etiqueta con su punto real sobre el cerebro.
+const STAGE_W=300, STAGE_H=210, IMG_W=220, IMG_H=200;
+const IMG_OX=(STAGE_W-IMG_W)/2, IMG_OY=(STAGE_H-IMG_H)/2;
+const PILL_SLOT={l:{x:16,y:22},r:{x:284,y:22}};
+function dotStagePos(key){ const p=NODE_POS[key]; return {x:IMG_OX+p.x/100*IMG_W, y:IMG_OY+p.y/100*IMG_H}; }
 let activeNodes=[];
 function renderRegions(id){
-  const stage=$('brainStage');
+  const stage=$('brainStage'), nodesBox=$('brainNodes'), svg=$('leaderSvg');
   stage.querySelectorAll('.regionPill').forEach(el=>el.remove());
-  document.querySelectorAll('#brainNodes .node').forEach(n=>{n.style.display='none';});
+  nodesBox.innerHTML=''; svg.innerHTML='';
+  svg.setAttribute('viewBox',`0 0 ${STAGE_W} ${STAGE_H}`); svg.removeAttribute('preserveAspectRatio');
   activeNodes=[];
   (REGIONS[id]||[]).forEach((r,i)=>{
-    const pos=NODE_POS[r.key], el=document.querySelector(`#brainNodes .node[data-id="${r.key}"]`);
-    if(el){ el.style.display=''; activeNodes.push({glow:el.querySelector('.glow'),core:el.querySelector('.core'),phase:i*0.18}); }
+    const pos=NODE_POS[r.key];
+    const dotColor0=r.side==='l'?'#38bdf8':'#fb7185';
+    const slot=PILL_SLOT[r.side], dp=dotStagePos(r.key);
+    const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('d',`M${slot.x},${slot.y} Q${(slot.x+dp.x)/2},${slot.y} ${dp.x},${dp.y}`);
+    path.setAttribute('stroke',dotColor0);
+    path.setAttribute('pathLength','1');
+    svg.appendChild(path);
+    const dot=document.createElement('div');
+    dot.className='actNode'; dot.style.left=pos.x+'%'; dot.style.top=pos.y+'%';
+    nodesBox.appendChild(dot);
+    activeNodes.push({el:dot,phase:i*0.18});
     const pill=document.createElement('div');
     pill.className='regionPill '+r.side;
-    pill.style.top=(pos.y/180*100)+'%';
-    const dotColor=r.side==='l'?'#38bdf8':'#fb7185';
-    pill.innerHTML=`<span class="rdot" style="background:${dotColor};box-shadow:0 0 6px ${dotColor}"></span><span><b>${r.label}</b><small>${r.sub}</small></span>`;
+    pill.style.top=(slot.y/STAGE_H*100)+'%';
+    pill.innerHTML=`<span class="rdot" style="background:${dotColor0};box-shadow:0 0 6px ${dotColor0}"></span><span><b>${r.label}</b><small>${r.sub}</small></span>`;
     stage.appendChild(pill);
   });
-  requestAnimationFrame(()=>stage.querySelectorAll('.regionPill').forEach(p=>p.classList.add('show')));
+  requestAnimationFrame(()=>{
+    stage.querySelectorAll('.regionPill').forEach(p=>p.classList.add('show'));
+    svg.querySelectorAll('path').forEach(p=>p.classList.add('show'));
+  });
 }
 
 const PROGRESSIONS = [
@@ -968,8 +913,8 @@ $('infoMore').onclick=()=>{const i=$('info');i.classList.toggle('open');$('infoM
     activeNodes.forEach(n=>{
       const e = hz>0 ? (1-d/2)+(d/2)*Math.sin(2*Math.PI*hz*(t-n.phase)) : 1;
       const amt = Session.playing ? lvl*e : 0.3+0.15*breathe;
-      n.core.setAttribute('r',(2.2+2.2*amt).toFixed(2));
-      n.glow.setAttribute('opacity',(0.3+0.6*amt).toFixed(2));
+      n.el.style.opacity=(0.35+0.65*amt).toFixed(2);
+      n.el.style.transform=`translate(-50%,-50%) scale(${(0.75+0.5*amt).toFixed(2)})`;
     });
     // onda
     const W=wv.width,H=wv.height; wc.clearRect(0,0,W,H);
