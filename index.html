@@ -119,6 +119,13 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 .tiny{display:flex;gap:6px;flex-wrap:wrap}
 .tiny .pill{padding:6px 10px;font-size:12px}
 .sub2{display:none;margin-top:8px}
+.switch{display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer}
+.switch .txt{font-size:13.5px}
+.switch .txt small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+.tg{position:relative;width:46px;height:26px;border-radius:999px;background:rgba(255,255,255,.1);border:1px solid var(--line);flex:0 0 auto;transition:all .2s}
+.tg::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .2s}
+.switch.on .tg{background:linear-gradient(90deg,var(--cyan),var(--vio));border-color:transparent}
+.switch.on .tg::after{transform:translateX(20px)}
 .sub2.show{display:flex}
 
 /* ---- how ---- */
@@ -246,6 +253,16 @@ footer{text-align:center;color:var(--muted);font-size:11px;margin-top:6px;line-h
     </div>
   </section>
 
+  <!-- CELULAR -->
+  <section class="card ctl">
+    <h2>Celular</h2>
+    <div class="switch on" id="wakeSwitch">
+      <div class="txt">Mantener la pantalla encendida<small>Mientras suena, el celular no se apaga solo.</small></div>
+      <div class="tg"></div>
+    </div>
+    <div class="hint" style="text-align:left">Si bloqueas el celular, la música sigue sonando y aparece en la pantalla de bloqueo con Play/Pausa. El temporizador apaga solo el sonido al terminar, aunque el teléfono esté bloqueado.</div>
+  </section>
+
   <!-- CÓMO FUNCIONA -->
   <section class="card how">
     <h2>¿Cómo funciona?</h2>
@@ -371,8 +388,23 @@ const Engine = {
     this.reverb = c.createConvolver(); this.reverb.buffer = this.makeIR(2.8);
     this.revGain = c.createGain(); this.revGain.gain.value = 0.35;
     this.reverb.connect(this.revGain).connect(this.master);
-    this.master.connect(this.analyser).connect(c.destination);
+    this.master.connect(this.analyser);
+    // Salida a través de un <audio> (MediaStream): el navegador lo trata como reproductor de
+    // música, sigue sonando con la pantalla bloqueada y muestra controles en la pantalla de bloqueo.
+    this.usingElement=false;
+    try{
+      this.msDest=c.createMediaStreamDestination(); this.analyser.connect(this.msDest);
+      this.el=new Audio(); this.el.srcObject=this.msDest.stream; this.el.setAttribute('playsinline',''); this.usingElement=true;
+    }catch(e){ this.analyser.connect(c.destination); }
     this.ok = true; return true;
+  },
+  async ensureOutput(){
+    if(!this.usingElement) return;
+    try{ await this.el.play(); }
+    catch(e){ // si el navegador no deja reproducir el elemento, salida directa
+      try{ this.analyser.disconnect(this.msDest); }catch(_){}
+      this.analyser.connect(this.ctx.destination); this.usingElement=false;
+    }
   },
   makeIR(sec){
     const c=this.ctx, n=Math.floor(c.sampleRate*sec), b=c.createBuffer(2,n,c.sampleRate);
@@ -467,8 +499,10 @@ class Layer{
 /* Scheduler musical (lookahead) */
 class Scheduler{
   constructor(bpm,onStep){this.bpm=bpm;this.onStep=onStep;this.timer=null;}
-  start(){const c=Engine.ctx;this.step=0;this.next=c.currentTime+0.05;
-    this.timer=setInterval(()=>{while(this.next<c.currentTime+0.12){this.onStep(this.step,this.next);this.next+=60/this.bpm/4;this.step++;}},25);}
+  start(){const c=Engine.ctx;this.step=0;this.next=c.currentTime+0.05;const dt=60/this.bpm/4;
+    this.timer=setInterval(()=>{
+      if(this.next<c.currentTime-0.5){ const skip=Math.ceil((c.currentTime-this.next)/dt); this.next+=skip*dt; this.step+=skip; } // se quedó atrás (pestaña dormida): saltar
+      while(this.next<c.currentTime+1.0){this.onStep(this.step,this.next);this.next+=dt;this.step++;}},100);}
   stop(){clearInterval(this.timer);}
 }
 
@@ -600,17 +634,50 @@ function buildWorld(id,layer,opts){
 const Session = {
   mode:MODES[0], world:WORLDS[0], noise:'brown', vol:0.6, depth:0.4, timerMin:0,
   playing:false, layer:null, wobj:null, remaining:0, tick:null, onState:()=>{}, onTick:()=>{},
+  wake:true, wakeLock:null, endAt:0,
   play(){
     if(!Engine.init()){document.getElementById('noaudio').style.display='block';return;}
     if(Engine.ctx.state==='suspended') Engine.ctx.resume();
+    Engine.ensureOutput();
     this.buildCurrent(3);
     this.playing=true;
     if(this.timerMin>0 && this.remaining<=0) this.remaining=this.timerMin*60;
+    this.endAt = this.timerMin>0 ? Date.now()+this.remaining*1000 : 0;
+    this.scheduleAutoOff();
     this.startTick(); this.onState('playing');
+    this.requestWake(); this.mediaSession();
   },
   pause(){
     if(!this.playing) return;
-    this.playing=false; this.teardown(2); clearInterval(this.tick); this.tick=null; this.onState('paused');
+    if(this.endAt) this.remaining=Math.max(0,Math.ceil((this.endAt-Date.now())/1000));
+    this.playing=false; this.endAt=0; this.teardown(2); clearInterval(this.tick); this.tick=null; this.onState('paused');
+    this.cancelAutoOff(); this.releaseWake();
+    if('mediaSession' in navigator) navigator.mediaSession.playbackState='paused';
+  },
+  // Apagado de respaldo programado en el reloj del audio: aunque el navegador congele el JS,
+  // el volumen baja y se apaga a la hora exacta.
+  scheduleAutoOff(){
+    this.cancelAutoOff(); if(!this.endAt||!Engine.ctx) return;
+    const g=Engine.master.gain, t=Engine.ctx.currentTime, secs=(this.endAt-Date.now())/1000, v=this.vol*0.9;
+    if(secs<=3) return;
+    g.setValueAtTime(v,t+secs-3); g.linearRampToValueAtTime(0.0001,t+secs);
+  },
+  cancelAutoOff(){ if(!Engine.ctx) return; const g=Engine.master.gain,t=Engine.ctx.currentTime; g.cancelScheduledValues(t); g.setValueAtTime(this.playing?this.vol*0.9:g.value,t); },
+  async requestWake(){
+    if(!this.wake||!('wakeLock' in navigator)) return;
+    try{ this.wakeLock=await navigator.wakeLock.request('screen'); this.wakeLock.addEventListener('release',()=>{this.wakeLock=null;}); }catch(e){ this.wakeLock=null; }
+  },
+  releaseWake(){ if(this.wakeLock){ try{this.wakeLock.release();}catch(e){} this.wakeLock=null; } },
+  setWake(on){ this.wake=on; if(on&&this.playing) this.requestWake(); else if(!on) this.releaseWake(); save(); },
+  mediaSession(){
+    if(!('mediaSession' in navigator)) return;
+    try{
+      navigator.mediaSession.metadata=new MediaMetadata({title:this.mode.nombre,artist:'NeuroFocus',album:this.world.nombre});
+      navigator.mediaSession.playbackState='playing';
+      navigator.mediaSession.setActionHandler('play',()=>{ if(!this.playing) this.play(); });
+      navigator.mediaSession.setActionHandler('pause',()=>{ this.pause(); });
+      navigator.mediaSession.setActionHandler('stop',()=>{ this.pause(); });
+    }catch(e){}
   },
   buildCurrent(fadeSec){
     const old=this.layer, oldW=this.wobj;
@@ -632,16 +699,16 @@ const Session = {
     this.layer.setModulation(m.hz,m.hz2,this.depth);
     if(m.rampa) this.layer.ramp(m.rampa.from,m.rampa.to,m.rampa.min*60);
   },
-  setMode(id){ this.mode=MODES.find(m=>m.id===id); if(this.playing) this.applyMode(); save(); },
-  setWorld(id){ this.world=WORLDS.find(w=>w.id===id); if(this.playing) this.buildCurrent(1); save(); },
+  setMode(id){ this.mode=MODES.find(m=>m.id===id); if(this.playing){ this.applyMode(); this.mediaSession(); } save(); },
+  setWorld(id){ this.world=WORLDS.find(w=>w.id===id); if(this.playing){ this.buildCurrent(1); this.mediaSession(); } save(); },
   setNoise(n){ this.noise=n; if(this.playing && this.world.id==='noisemask') this.buildCurrent(1); save(); },
-  setVolume(v){ this.vol=v; if(Engine.master) Engine.master.gain.setTargetAtTime(v*0.9,Engine.ctx.currentTime,0.05); save(); },
+  setVolume(v){ this.vol=v; if(Engine.master){ const g=Engine.master.gain,t=Engine.ctx.currentTime; g.cancelScheduledValues(t); g.setTargetAtTime(v*0.9,t,0.05); this.scheduleAutoOff(); } save(); },
   setDepth(d){ this.depth=d; if(this.layer&&!this.mode.rampa) this.layer.setModulation(this.mode.hz,this.mode.hz2,d); else if(this.layer){ const hz=this.layer.currentHz(); this.layer.setModulation(hz,null,d); this.layer.ramp(hz,this.mode.rampa.to,Math.max(1,this.mode.rampa.min*60-(Engine.ctx.currentTime-(this.layer.rampInfo?this.layer.rampInfo.t0:Engine.ctx.currentTime)))); } save(); },
-  setTimer(min){ this.timerMin=min; this.remaining=min>0?min*60:0; this.onTick(this.remaining); },
-  startTick(){ clearInterval(this.tick); this.tick=setInterval(()=>{ if(this.timerMin>0){ this.remaining--; this.onTick(this.remaining); if(this.remaining<=0){ this.pause(); } } },1000); },
+  setTimer(min){ this.timerMin=min; this.remaining=min>0?min*60:0; this.endAt=(this.playing&&min>0)?Date.now()+min*60000:0; if(this.playing) this.scheduleAutoOff(); this.onTick(this.remaining); },
+  startTick(){ clearInterval(this.tick); this.tick=setInterval(()=>{ if(this.endAt){ this.remaining=Math.max(0,Math.ceil((this.endAt-Date.now())/1000)); this.onTick(this.remaining); if(this.remaining<=0){ this.pause(); } } },1000); },
   currentHz(){ return this.layer?this.layer.currentHz():this.mode.hz; }
 };
-function save(){ try{ localStorage.setItem('nf',JSON.stringify({mode:Session.mode.id,world:Session.world.id,noise:Session.noise,vol:Session.vol,depth:Session.depth})); }catch(e){} }
+function save(){ try{ localStorage.setItem('nf',JSON.stringify({mode:Session.mode.id,world:Session.world.id,noise:Session.noise,vol:Session.vol,depth:Session.depth,wake:Session.wake})); }catch(e){} }
 function load(){ try{ const s=JSON.parse(localStorage.getItem('nf')||'null'); if(!s) return null; return s; }catch(e){ return null; } }
 
 /* =========================================================
@@ -698,17 +765,20 @@ $('vol').oninput=e=>{const v=+e.target.value;setRange(e.target,v);$('volTxt').te
 $('depth').oninput=e=>{const v=+e.target.value;setRange(e.target,v);$('depthTxt').textContent=v+'%';Session.setDepth(v/100);};
 $('timer').onclick=e=>{const p=e.target.closest('.pill');if(p)selectTimer(+p.dataset.m);};
 $('noiseSub').onclick=e=>{const p=e.target.closest('.pill');if(!p)return;document.querySelectorAll('#noiseSub .pill').forEach(x=>x.classList.toggle('on',x===p));Session.setNoise(p.dataset.n);};
+$('wakeSwitch').onclick=()=>{const on=!$('wakeSwitch').classList.contains('on');$('wakeSwitch').classList.toggle('on',on);Session.setWake(on);};
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'&&Session.playing){ Session.requestWake(); if(Engine.ctx&&Engine.ctx.state==='suspended') Engine.ctx.resume(); Engine.ensureOutput(); } });
 $('infoMore').onclick=()=>{const i=$('info');i.classList.toggle('open');$('infoMore').textContent=i.classList.contains('open')?'Ver menos ▴':'Ver más ▾';};
 
 /* init desde localStorage */
 (function(){
   const s=load();
-  if(s){ if(MODES.find(m=>m.id===s.mode)) Session.mode=MODES.find(m=>m.id===s.mode); if(WORLDS.find(w=>w.id===s.world)) Session.world=WORLDS.find(w=>w.id===s.world); Session.noise=s.noise||'brown'; Session.vol=s.vol??0.6; Session.depth=s.depth??0.4; }
+  if(s){ if(MODES.find(m=>m.id===s.mode)) Session.mode=MODES.find(m=>m.id===s.mode); if(WORLDS.find(w=>w.id===s.world)) Session.world=WORLDS.find(w=>w.id===s.world); Session.noise=s.noise||'brown'; Session.vol=s.vol??0.6; Session.depth=s.depth??0.4; Session.wake=s.wake??true; }
   renderModes(); renderWorlds();
   selectMode(Session.mode.id,false); selectWorld(Session.world.id); selectTimer(Session.mode.timer);
   setRange($('vol'),Math.round(Session.vol*100)); $('volTxt').textContent=Math.round(Session.vol*100)+'%';
   setRange($('depth'),Math.round(Session.depth*100)); $('depthTxt').textContent=Math.round(Session.depth*100)+'%';
   document.querySelectorAll('#noiseSub .pill').forEach(x=>x.classList.toggle('on',x.dataset.n===Session.noise));
+  $('wakeSwitch').classList.toggle('on',Session.wake);
   if(!(window.AudioContext||window.webkitAudioContext)) $('noaudio').style.display='block';
 })();
 
