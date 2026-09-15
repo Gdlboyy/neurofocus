@@ -424,6 +424,7 @@ const mtof = m => 440*Math.pow(2,(m-69)/12);
    ========================================================= */
 const Engine = {
   ctx:null, master:null, analyser:null, reverb:null, dry:null, ok:false,
+  _ticker:null, _tickRefs:0, _wdHandler:null,
   init(){
     if(this.ctx) return true;
     const AC = window.AudioContext||window.webkitAudioContext;
@@ -432,11 +433,20 @@ const Engine = {
     const c = this.ctx;
     this.master = c.createGain(); this.master.gain.value = 0.6;
     this.analyser = c.createAnalyser(); this.analyser.fftSize = 1024;
-    this.reverb = c.createConvolver(); this.reverb.buffer = this.makeIR(2.8);
+    // Cola de reverb más corta que antes (2.8s -> 1.7s): la convolución en tiempo real es,
+    // de lejos, el nodo más caro de todo el motor de audio, y su costo crece con la
+    // duración del impulso. En celulares modestos una cola tan larga puede saturar el
+    // hilo de audio y sonar como cortes/tartamudeo aunque el resto del grafo sea liviano.
+    this.reverb = c.createConvolver(); this.reverb.buffer = this.makeIR(1.7);
     this.revGain = c.createGain(); this.revGain.gain.value = 0.35;
     this.reverb.connect(this.revGain).connect(this.master);
     // El audio real va SIEMPRE directo a los altavoces: es el camino sin cortes.
     this.master.connect(this.analyser).connect(c.destination);
+    // Si el sistema operativo o el navegador suspenden el AudioContext (pasa al
+    // bloquear el celular, cambiar de app o con auriculares Bluetooth), reanudarlo
+    // en cuanto se detecte: sin esto el audio se queda "trabado" en silencio hasta
+    // que el usuario vuelve a tocar la pantalla.
+    c.onstatechange=()=>{ if(Session.playing && c.state!=='running'){ c.resume().catch(()=>{}); } };
     // Ancla silenciosa aparte (no lleva el sonido generado): un <audio> en loop con
     // silencio puro. Su único trabajo es mantener viva la sesión de medios para que
     // aparezcan los controles en la pantalla de bloqueo y el navegador no descarte
@@ -450,6 +460,48 @@ const Engine = {
   async ensureOutput(){
     if(!this.el) return;
     try{ await this.el.play(); }catch(e){ /* algunos navegadores exigen otro gesto: no afecta al audio real */ }
+  },
+  // Reloj compartido en un Web Worker para programar la música. Un setInterval normal
+  // en la pestaña se ralentiza mucho (a veces a 1 vez por minuto) cuando el celular se
+  // bloquea o Chrome pone la pestaña en segundo plano; un Worker tiene su propio bucle
+  // y sigue marcando el paso a tiempo, así el audio no se queda con huecos ni "atropella"
+  // notas al recuperarse. Varios oyentes (Scheduler + vigilante) comparten un solo Worker.
+  getTicker(){
+    if(this._ticker) return this._ticker;
+    const code = "let t=null;onmessage=function(e){if(e.data==='start'){if(t)return;t=setInterval(function(){postMessage(1);},100);}else if(e.data==='stop'){clearInterval(t);t=null;}};";
+    try{
+      const blob = new Blob([code],{type:'application/javascript'});
+      this._ticker = new Worker(URL.createObjectURL(blob));
+    }catch(e){ this._ticker=null; }
+    return this._ticker;
+  },
+  startTicker(){
+    this._tickRefs++;
+    const w=this.getTicker(); if(w && this._tickRefs===1) w.postMessage('start');
+  },
+  stopTicker(){
+    this._tickRefs=Math.max(0,this._tickRefs-1);
+    const w=this._ticker; if(w && this._tickRefs===0) w.postMessage('stop');
+  },
+  // Vigilante: mientras se está reproduciendo, en cada marca del reloj comprueba que el
+  // AudioContext siga corriendo y que el ancla silenciosa siga sonando; si el sistema los
+  // pausó (muy común justo al bloquear la pantalla), los reactiva de inmediato.
+  startWatchdog(){
+    const w=this.getTicker(); if(!w) return;
+    if(!this._wdHandler){
+      this._wdHandler=()=>{
+        if(this.ctx && this.ctx.state!=='running'){ this.ctx.resume().catch(()=>{}); }
+        if(this.el && this.el.paused) this.ensureOutput();
+      };
+      w.addEventListener('message', this._wdHandler);
+    }
+    this.startTicker();
+  },
+  stopWatchdog(){
+    const w=this._ticker;
+    if(w && this._wdHandler){ w.removeEventListener('message', this._wdHandler); }
+    this._wdHandler=null;
+    this.stopTicker();
   },
   makeIR(sec){
     const c=this.ctx, n=Math.floor(c.sampleRate*sec), b=c.createBuffer(2,n,c.sampleRate);
@@ -541,14 +593,28 @@ class Layer{
   dispose(){try{[this.lfo1,this.lfo2,this.fLfo,this.drift,this.pLfo].forEach(o=>o.stop());}catch(e){} this.out.disconnect();}
 }
 
-/* Scheduler musical (lookahead) */
+/* Scheduler musical (lookahead). El pulso viene de un Worker compartido (Engine.getTicker)
+   en vez de un setInterval de la pestaña: así sigue marcando el tiempo aunque el celular
+   esté bloqueado o Chrome frene los timers en segundo plano, y no se generan silencios ni
+   "atropellos" de notas al recuperar el foco. Si por algo no hay Worker disponible, cae a
+   un setInterval normal (peor en background, pero sigue sonando en primer plano). */
 class Scheduler{
-  constructor(bpm,onStep){this.bpm=bpm;this.onStep=onStep;this.timer=null;}
-  start(){const c=Engine.ctx;this.step=0;this.next=c.currentTime+0.05;const dt=60/this.bpm/4;
-    this.timer=setInterval(()=>{
-      if(this.next<c.currentTime-0.5){ const skip=Math.ceil((c.currentTime-this.next)/dt); this.next+=skip*dt; this.step+=skip; } // se quedó atrás (pestaña dormida): saltar
-      while(this.next<c.currentTime+1.0){this.onStep(this.step,this.next);this.next+=dt;this.step++;}},100);}
-  stop(){clearInterval(this.timer);}
+  constructor(bpm,onStep){this.bpm=bpm;this.onStep=onStep;this.timer=null;this.worker=null;this._onTick=null;}
+  start(){
+    const c=Engine.ctx;this.step=0;this.next=c.currentTime+0.05;const dt=60/this.bpm/4;
+    const tick=()=>{
+      const now=Engine.ctx.currentTime;
+      if(this.next<now-0.5){ const skip=Math.ceil((now-this.next)/dt); this.next+=skip*dt; this.step+=skip; } // se quedó atrás (pestaña dormida): saltar
+      while(this.next<now+1.0){this.onStep(this.step,this.next);this.next+=dt;this.step++;}
+    };
+    const w=Engine.getTicker();
+    if(w){ this.worker=w; this._onTick=tick; w.addEventListener('message',this._onTick); Engine.startTicker(); }
+    else { this.timer=setInterval(tick,100); }
+  }
+  stop(){
+    if(this.worker){ this.worker.removeEventListener('message',this._onTick); Engine.stopTicker(); this.worker=null; this._onTick=null; }
+    if(this.timer){ clearInterval(this.timer); this.timer=null; }
+  }
 }
 
 /* ---------- síntesis ---------- */
@@ -690,13 +756,13 @@ const Session = {
     this.endAt = this.timerMin>0 ? Date.now()+this.remaining*1000 : 0;
     this.scheduleAutoOff();
     this.startTick(); this.onState('playing');
-    this.requestWake(); this.mediaSession();
+    this.requestWake(); this.mediaSession(); Engine.startWatchdog();
   },
   pause(){
     if(!this.playing) return;
     if(this.endAt) this.remaining=Math.max(0,Math.ceil((this.endAt-Date.now())/1000));
     this.playing=false; this.endAt=0; this.teardown(2); clearInterval(this.tick); this.tick=null; this.onState('paused');
-    this.cancelAutoOff(); this.releaseWake();
+    this.cancelAutoOff(); this.releaseWake(); Engine.stopWatchdog();
     if('mediaSession' in navigator) navigator.mediaSession.playbackState='paused';
   },
   // Apagado de respaldo programado en el reloj del audio: aunque el navegador congele el JS,
@@ -731,7 +797,16 @@ const Session = {
     this.wobj=buildWorld(this.world.id,this.layer,{noise:this.noise});
     this.wobj.direct.gain.setValueAtTime(0,Engine.ctx.currentTime); this.wobj.fadeDirect(1,fadeSec);
     this.layer.fadeIn(fadeSec);
-    if(old){ old.fadeOut(1); oldW.fadeDirect(0,1); setTimeout(()=>{oldW.stop();old.dispose();},1300); }
+    if(old){
+      // Al cambiar de modo/mundo hay, durante el cruce, dos capas de síntesis completas
+      // sonando a la vez. Si la vieja sigue generando notas nuevas (kick, pads, hats...)
+      // mientras se apaga, duplica la carga de CPU del audio para nada (ya no se va a
+      // oír). Frenar su reloj de inmediato evita ese pico de carga -en celulares
+      // limitados es justo lo que provoca cortes/tartamudeo al cambiar de sonido- sin
+      // afectar las notas que ya sonaban, que siguen su apagado (fadeOut) con normalidad.
+      if(oldW.sched) oldW.sched.stop();
+      old.fadeOut(1); oldW.fadeDirect(0,1); setTimeout(()=>{oldW.stop();old.dispose();},1300);
+    }
   },
   teardown(fadeSec){
     const l=this.layer,w=this.wobj; if(!l) return;
